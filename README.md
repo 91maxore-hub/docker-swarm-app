@@ -37,13 +37,21 @@ Tillsammans skapar dessa tjänster en skalbar, flexibel och säker miljö för w
 **Mapp struktur**
 
 docker-swarm-app/
+
 ├── Dockerfile
+
 ├── index.html
+
 ├── contact_form.html
+
 ├── process_contact_form.php
+
 ├── style.css
+
 └── .github/
+
     └── workflows/
+        
         └── deploy.yml
 
 
