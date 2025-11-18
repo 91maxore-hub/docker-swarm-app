@@ -49,10 +49,8 @@ docker-swarm-app/
 ├── style.css
 
 └── .github/
-
-    └── workflows/
-        
-        └── deploy.yml
+ └── workflows/
+ └── deploy.yml
 
 
 ![alt text](image.png)
