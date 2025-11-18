@@ -103,3 +103,207 @@ ssh -i ~Downloads/swarm-manager-key.pem ec2-user@34.246.185.128
 **Notera att du får ändra sökvägen till din SSH-nyckel, samt den publika IP-adress till din instans**
 
 ![alt text](image-7.png)
+
+**Steg 2: Initiera Swarm på manager**
+- Kör följande på **swarm-manager**
+
+```bash
+docker swarm init --advertise-addr 34.246.185.128
+```
+
+- Kopiera nu kommandot som skrivs ut för att ansluta våra övriga worker-noder, du bör få något som ser ut så här:
+
+```bash
+docker swarm join --token SWMTKN-1-1qb2x87bw5wx75p5opwk8qqqoy513l2piskjrcze19acy8da3c-ec79bgjfs3q8doy3cpw3306js 172.31.23.10:2377
+```
+
+# Ansluta worker-noder via SSH på swarm-worker 1 och swarm-worker-2
+
+**Steg 1: Kör nu följande för att ansluta swarm-worker-1 och swarm-worker-2 till Docker Swarm-klustret:**
+
+```bash
+docker swarm join --token SWMTKN-1-1qb2x87bw5wx75p5opwk8qqqoy513l2piskjrcze19acy8da3c-ec79bgjfs3q8doy3cpw3306js 172.31.23.10:2377
+```
+
+**Steg 2: Verifera sedan på swarm-manager att worker-noderna har lagts till i klustret genom att ange:**
+
+```bash
+docker node ls
+```
+
+**Steg 3: Du bör se något liknande:**
+
+![alt text](image-9.png)
+
+- Detta bekräftar att vårt Docker Swarm-kluster är nu skapad med 1 manager och 2 workers.
+
+# Skapandet av ett Docker Hub-repository
+
+Efter att initieringen av Docker Swarm-klustret nu är klar är det snart dags att paketera projektet i en Docker-image och publicera den på Docker Hub, eftersom min app är PHP-baserad.
+Vi behöver dessutom sedan en Dockerfile som använder en PHP + webserver image (t.ex. php:8.2-apache) och som kopierar mina filer.
+För att börja med detta måste man först skapa ett repository på Docker Hub som ska lagra och distribuera min Docker-image som jag döpte till **docker-swarm-app** (Se bilden nedan)
+
+![alt text](image-10.png)
+
+## Följ stegen nedan för att skapa ett **Docker Hub-repository**
+
+**Steg 1: Logga in på Docker Hub:**
+
+Gå till [https://hub.docker.com/repositories/ditt-användarnamn](https://hub.docker.com/repositories/ditt-användarnamn)
+
+**Steg 2: Navigera till dina repositories:**
+
+Du kommer direkt till listan över repositories under ditt konto. 
+
+![alt text](image-11.png)
+
+**Steg 3: Skapa ett nytt repository:**
+
+Klicka på **"Create a Repository"** längst bort till höger.
+
+![alt text](image-12.png)
+
+**Steg 4: Fyll i repository-information:**
+
+- **Repository Name:** Ange ett namn för ditt repo, t.ex. `docker-swarm-app` kommer bli **ditt-användarnamn**/`docker-swarm-app` senare när du ska bygga och pusha Docker-image  
+- **Visibility:** Välj om ditt repo ska vara **Public** eller **Private**  
+- **Description:** Lägg till en kort beskrivning om av vad repot innehåller  
+- Klicka på **"Create"**
+
+![alt text](image-13.png)
+
+# Skapandet av Dockerfile
+
+Jag skapade därefter en Dockerfile som använder PHP 8.2 med Apache och kopierar in mina applikationsfiler från projektmappen.
+**Kortfattat:** en Dockerfile är en fil som beskriver hur ens Docker-image ska byggas.
+
+**Dockerfile** (docker-swarm-app/Dockerfile) gör följande:
+
+1. Använder officiell PHP 8.2 med Apache som grundimage.
+2. Aktiverar Apache-modulen `mod_rewrite` för att möjliggöra URL-omskrivningar.
+3. Kopierar alla applikationsfiler från projektmappen till Apache:s webbroot (`/var/www/html/`).
+4. Exponerar port 80 så att webbservern kan ta emot HTTP-trafik.
+
+# Byggandet av Docker Image och ladda upp till Docker Hub
+
+### Nu är det dags att gå igenom stegen för att paketera projektet i en Docker-image och publicera den på Docker Hub
+
+**Steg 1: Byggandet av Docker Image**
+
+Jag använde terminalen i Visual Studio Code och angav följande kommando i projektmappen (där appens samtliga filer finns) för att bygga mina applikations-filer till en Docker-image och ge den en tagg.  
+
+**91maxore** = användarnamn  
+**docker-swarm-app** = repo på Docker Hub
+
+```bash
+docker build -t 91maxore/docker-swarm-app:latest .
+```
+
+**Steg 2: Logga in på Docker Hub**
+
+Logga in på Docker Hub via terminalen:
+```bash
+docker login
+```
+
+- Angav mitt användarnamn och lösenord som jag använder till Docker Hub.
+
+**Steg 3: Pusha Docker-image till Docker Hub**
+
+När imagen är byggd och du är inloggad, pusha imagen till Docker Hub med:
+```bash
+docker push 91maxore/docker-swarm-app:latest
+```
+
+Detta pushar min nyskapade Docker-image till Docker Hub och är redo för användning.  
+Nu ligger den på Docker Hub:
+
+🔗 https://hub.docker.com/repository/docker/91maxore/docker-swarm-app
+
+När man skapar eller uppdaterar en Docker Swarm-service skickar manager-noden instruktionen till alla workers.
+Om ens worker inte har den image-version som behövs, hämtar den automatiskt (pull) imagen från Docker Hub eller den angivna registry.
+Man behöver alltså inte göra pull manuellt på varje worker.
+
+**Steg 4: Vi kan nu även verifiera att worker-noderna tagit del av samma docker-image:**
+
+```bash
+docker service ls
+docker service ps myapp
+```
+
+![alt text](image-14.png)
+
+- Som du kan se så kör mitt Docker Swarm-kluster även Treafik för reverse proxy + https
+- Detta kommer jag gå igenom senare
+
+# Docker Vizualiser
+Docker Swarm Visualizer är ett verktyg som ger en grafisk översikt över ditt Docker Swarm-kluster.
+Det visar alla noder, både manager och worker, samt vilka containrar som körs på respektive nod i realtid.
+Visualizer är ett utmärkt sätt att snabbt förstå klustrets struktur, övervaka distributionen av tjänster och kontrollera att skalning och repliker fungerar som förväntat.
+
+**Steg 1: Börja med att skapa en docker-stack.yml och lägg in nedanstående kod:**
+
+```bash
+version: "3.8"
+
+services:
+  viz:
+    image: dockersamples/visualizer:stable
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    ports:
+      - "8081:8080"                   # Visualizer-webbgränssnitt
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: overlay
+```
+
+**Beskrivning**
+- Kör Visualizer som en Swarm-tjänst på manager-noden.
+- Mountar Docker-socket för att kunna läsa klustrets noder och containrar.
+- Exponerar Visualizer på port 8081
+- Använder overlay-nätverk så den kan kommunicera med andra tjänster om det behövs.
+
+**Steg 2: Deploya stacken genom att köra detta på manager-noden:**
+
+```bash
+docker stack deploy -c docker-stack.yml docker-swarm-app
+```
+- docker-swarm-app blir namnet på stacken eftersom vår stack kommer i slutändan innehålla flera tjänster: web, viz och traefik
+- samtliga tjänster kommer befinnas sig på följande benämningar: docker-swarm-app-web, docker-swarm-app-viz och docker-swarm-app-traefik
+
+**Steg 3: Kontrollera att tjänsten körs**
+
+```bash
+docker service ps docker-swarm-app_viz
+```
+
+![alt text](image-15.png)
+
+**Steg 4: Öppna Visualizer**
+
+- Surfa in till managers publika IP följt av port 8081, alltså: http://34.246.185.128:8081
+- Du ser alla noder och containrar i ditt Swarm-kluster visuellt.
+
+**Sammanfattningsvis:**
+- Visualizer körs som en separat service på manager, exponerar ett webbläsargränssnitt och visar i realtid alla noder och containrar i Swarm-klustret.
+
+![alt text](image-16.png)
+
+**Beskrivning av de tre tjänsterna** i min stack:
+
+* **docker-swarm-app-web**
+  Min webbapplikation som körs i Swarm. Den hanterar själva innehållet, som HTML och PHP, och kan skalas över flera noder.
+
+* **viz (Docker Swarm Visualizer)**
+  Ett grafiskt verktyg som visar **Swarm-klustret i realtid**, inklusive noder och containrar. Hjälper dig att övervaka distribution och repliker.
+
+* **Traefik**
+  En modern reverse proxy och load balancer som hanterar inkommande trafik. Den styr HTTPS, certifikat via Let's Encrypt, och distribuerar trafiken till dina tjänster i Swarm (t.ex. web-applikationen).
