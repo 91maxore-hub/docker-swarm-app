@@ -48,13 +48,58 @@ Tillsammans skapar dessa tjänster en skalbar, flexibel och säker miljö för w
 |      └── **deploy.yml**          | Fil  | Workflow som hanterar CI/CD och deployment.          |
 
 
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
-![alt text](image-4.png)
-![alt text](image-5.png)
-![alt text](image-6.png)
-![alt text](image-7.png)
+# Provisionera Amazon EC2-server
 
-Test
+Denna guide beskriver hur man provisionerar Amazon EC2-instanser som ska ingå i ett Docker Swarm-kluster. Målet är att skapa en stabil och skalbar miljö med en Swarm Manager och två Swarm Workers. EC2-instanserna kommer att konfigureras med nödvändig nätverksåtkomst, säkerhetsgrupper och grundläggande systemkrav för att stödja containerorkestrering med Docker Swarm.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange EC2 i sökrutan och välj "EC2 - Virtual Servers in the Cloud"**
+
+![alt text](image-1.png)
+
+**Steg 3: Välj "Launch Instance"**
+
+![alt text](image-2.png)
+
+**Steg 4: Ange ett namn för din server, operativsystem (AMI), instanstyp, samt skapa SSH-nyckel för säker åtkomst.**
+
+![alt text](image-3.png)
+
+**Steg 5: Välj sedan säkerhetsgruppen (docker-swarm-sg) som ansvarar för vilka portar som ska användas för vårt Docker Swarm-kluster. Resten kan lämnas som det är.**
+
+![alt text](image-4.png)
+
+**Steg 6: Gå sedan längst ner till Advanced details -> User data och klistra in följande:**
+
+```bash
+#!/bin/bash
+dnf update -y
+dnf install -y docker
+systemctl enable --now docker
+usermod -aG docker ec2-user
+```
+
+![alt text](image-5.png)
+
+**Steg 6: Du får sedan en kort översikt över EC2-servern längst upp till höger. Välj Launch instance.**
+
+![alt text](image-8.png)
+
+**Repetera nu likadant för swarm-worker-1 och swarm-worker-2**
+
+**Steg 7: Du bör nu se en översikt som nedan för samtliga EC2-servrar som kommer används i vårt Docker Swarm-kluster.**
+
+![alt text](image-6.png)
+
+# Initiera Docker Swarm via SSH på swarm-manager
+
+**Steg 1: Först behöver vi SSHa in på vår nyskapade EC2 genom att ange:**
+```bash
+ssh -i ~Downloads/swarm-manager-key.pem ec2-user@34.246.185.128
+```
+**Notera att du får ändra sökvägen till din SSH-nyckel, samt den publika IP-adress till din instans**
+
+![alt text](image-7.png)
