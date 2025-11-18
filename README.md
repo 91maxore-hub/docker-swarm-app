@@ -36,20 +36,17 @@ Tillsammans skapar dessa tjänster en skalbar, flexibel och säker miljö för w
 
 **Mapp struktur**
 
-docker-swarm-app/
-
-├── Dockerfile
-
-├── index.html
-
-├── contact_form.html
-
-├── process_contact_form.php
-
-├── style.css
-
-└── .github/workflows/  
-  └── deploy.yml
+| Sökväg / Namn                    | Typ  | Beskrivning                                                                   |
+| -------------------------------- | ---- | ----------------------------------------------------------------------------- |
+| **docker-swarm-app/**            | Mapp | Rotmappen för hela projektet.                                                 |
+| ├── **Dockerfile**               | Fil  | Bygger Docker-imagen för applikationen, definierar miljö och beroenden.       |
+| ├── **index.html**               | Fil  | Huvudsidan för webbapplikationen (startsida).                                 |
+| ├── **contact_form.html**        | Fil  | Sida med kontaktformulär som användaren fyller i.                             |
+| ├── **process_contact_form.php** | Fil  | PHP-script som tar emot och bearbetar data från kontaktformuläret.            |
+| ├── **style.css**                | Fil  | CSS-fil som styr webbplatsens utseende.                                       |
+| └── **.github/**                 | Mapp | GitHub-konfigurationsmapp för CI/CD och andra GitHub-specifika inställningar. |
+|      └── **workflows/**          | Mapp | Mapp för GitHub Actions-workflows.                                            |
+|          └── **deploy.yml**      | Fil  | GitHub Actions-workflow som hanterar automatiserad deploy.                    |
 
 
 ![alt text](image.png)
