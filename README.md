@@ -143,13 +143,13 @@ Jag skapade därefter en Dockerfile som använder PHP 8.2 med Apache och kopiera
 3. Kopierar alla applikationsfiler från projektmappen till Apache:s webbroot (`/var/www/html/`).
 4. Exponerar port 80 så att webbservern kan ta emot HTTP-trafik.
 
-# Byggandet av Docker Image och ladda upp till Docker Hub
+# Byggandet av Docker Image och uppladdning till Docker Hub
 
 ### Nu är det dags att gå igenom stegen för att paketera projektet i en Docker-image och publicera den på Docker Hub
 
 **Steg 1: Byggandet av Docker Image**
 
-Jag använde terminalen i Visual Studio Code och angav följande kommando i projektmappen (där appens samtliga filer finns) för att bygga mina applikations-filer till en Docker-image och ge den en tagg.  
+Jag använde terminalen i Visual Studio Code och angav följande kommando utifrån projektmappen (där appens samtliga filer finns) för att bygga mina applikations-filer till en Docker-image och ge den en tagg.  
 
 **91maxore** = användarnamn  
 **docker-swarm-app** = repo på Docker Hub
@@ -183,30 +183,32 @@ När man skapar eller uppdaterar en Docker Swarm-service skickar manager-noden i
 Om ens worker inte har den image-version som behövs, hämtar den automatiskt (pull) imagen från Docker Hub eller den angivna registry.
 Man behöver alltså inte göra pull manuellt på varje worker.
 
-# Initiera Docker Swarm genom att ansluta till din swarm-manager via SSH och utför kommandot som startar klustret och gör noden till manager.
+# Initiering av Docker Swarm
 
-**Steg 1: Först behöver vi SSHa in på vår nyskapade EC2 genom att ange:**
+För att initiera ett Docker Swarm-kluster, anslut till din swarm-manager via SSH och kör kommandot nedan som startar klustret och utser noden till manager.
+
+**Steg 1: Börja med att SSHa in på vår nyskapade EC2 genom att ange:**
 ```bash
 ssh -i ~Downloads/swarm-manager-key.pem ec2-user@34.246.185.128
 ```
-**Notera att du får ändra sökvägen till din SSH-nyckel, samt den publika IP-adress till din instans**
+**Notera att du får ändra sökvägen till din SSH-nyckel, samt den publika IP-adress till din EC2-instans**
 
 ![alt text](image-7.png)
 
-**Steg 2: Initiera Swarm på manager**
-- Kör följande på **swarm-manager**
+**Steg 2: Initiera Docker Swarm-kluster på manager genom att köra följande:**
 
 ```bash
 docker swarm init --advertise-addr 34.246.185.128
 ```
 
-- Kopiera nu kommandot som skrivs ut för att ansluta våra övriga worker-noder, du bör få något som ser ut så här:
+**Notera att du får byta ut IP-adressen mot den publika IP som din swarm-manager har***
+- Kopiera nu kommandot med dess token som skrivs ut för att ansluta våra övriga worker-noder, du bör få något som ser ut så här:
 
 ```bash
 docker swarm join --token SWMTKN-1-1qb2x87bw5wx75p5opwk8qqqoy513l2piskjrcze19acy8da3c-ec79bgjfs3q8doy3cpw3306js 172.31.23.10:2377
 ```
 
-# Ansluta worker-noder via SSH på swarm-worker 1 och swarm-worker-2
+# Anslutning av worker-noder via SSH på Swarm Worker 1 och Swarm Worker 2
 
 **Steg 1: Kör nu följande för att ansluta swarm-worker-1 och swarm-worker-2 till Docker Swarm-klustret:**
 
@@ -214,13 +216,15 @@ docker swarm join --token SWMTKN-1-1qb2x87bw5wx75p5opwk8qqqoy513l2piskjrcze19acy
 docker swarm join --token SWMTKN-1-1qb2x87bw5wx75p5opwk8qqqoy513l2piskjrcze19acy8da3c-ec79bgjfs3q8doy3cpw3306js 172.31.23.10:2377
 ```
 
+- Notera att du får byta ut den token du får
+
 **Steg 2: Verifera sedan på swarm-manager att worker-noderna har lagts till i klustret genom att ange:**
 
 ```bash
 docker node ls
 ```
 
-**Steg 3: Du bör se något liknande:**
+**Steg 3: Du bör då se något liknande:**
 
 ![alt text](image-9.png)
 
@@ -229,7 +233,7 @@ docker node ls
 **Steg 4: Skapa Docker Compose-fil**
 
 - En **docker-stack.yml** behövs för att definiera hela applikationens tjänster, nätverk och inställningar på ett och samma ställe, så att Docker Swarm kan deploya och hantera allt som en komplett stack.
-- På swarm-manager, skapa stackfilen **docker-stack.yml** och ange följande:
+- På swarm-manager, skapa stackfilen **docker-stack.yml** och klistra in följande:
 
 ```bash
 version: "3.8"
@@ -252,11 +256,21 @@ networks:
     driver: overlay
 ```
 
-**Steg 5: Distribuera Docker Swarm-stacken på docker-swarm noden genom att ange följande:**
+**Beskrivning**
+
+* Kör `91maxore/docker-swarm-app` som en Swarm-tjänst med 3 repliker.
+* Startar om repliker automatiskt vid fel.
+* Exponerar tjänsten på port 80.
+* Använder overlay-nätverk (`webnet`) så att tjänsten kan kommunicera med andra tjänster i klustret.
+
+**Steg 5: Distribuera Docker Swarm-stacken genom att ange följande:**
 
 ```bash
 sudo docker stack deploy -c docker-stack.yml docker-swarm-app
 ```
+
+- docker-swarm-app blir namnet på stacken eftersom vår stack kommer i slutändan innehålla flera tjänster: web, viz och traefik
+- samtliga tjänster kommer befinnas sig på följande benämningar: docker-swarm-app_web, docker-swarm-app_viz och docker-swarm-app_traefik
 
 **Steg 6: Vi kan nu kontrollera statusen för varje instans av webbapplikationen, se på vilken nod de körs och verifiera att alla tre repliker fungerar som de ska. Detta görs med följande kommando:**
 
@@ -265,12 +279,12 @@ sudo docker service ps docker-swarm-app_web
 ```
 
 - Webbapplikationen kör nu stabilt och som förväntat på alla tre noder i Swarm-klustret, vilket bekräftar att deploymenten fungerar korrekt.
-- Kort sagt: detta visar var och hur min web-app körs inom Swarm-klustret
-- Det fungerar på samma sätt genom att ange docker-swarm-app_viz för Docker Vizualizer och docker-swarm-app_traefik för Traefik som hanterar reverse proxy + https
+- Kort sagt: bilden visar var och hur min web-app körs inom Swarm-klustret
+- Det fungerar på samma sätt genom att senare ange docker-swarm-app_viz för Docker Vizualizer och docker-swarm-app_traefik för Traefik som hanterar reverse proxy + https
 
 ![alt text](image-17.png)
 
-**Steg 4: Vi kan även verifiera att worker-noderna tagit del av samma docker-image och att webbapplikationen är replikerad utöver alla 3 noder.**
+**Steg 7: Vi kan även verifiera att swarm-worker 1 och swarm-worker 2 tagit del av samma docker-image och att webbapplikationen är replikerad utöver alla 3 noder med följande kommando:**
 
 ```bash
 docker service ls
@@ -278,14 +292,17 @@ docker service ls
 
 ![alt text](image-14.png)
 
-- Som du kan se kör mitt Docker Swarm-kluster även Traefik för reverse proxy och HTTPS-hantering, och detta kommer jag att gå igenom detta mer detaljerat senare i guiden.**
+- Som du kan se kör mitt Docker Swarm-kluster även Traefik för reverse proxy och HTTPS-hantering, och detta kommer jag att gå igenom detta mer detaljerat senare i guiden.
+- Dessutom kör mitt Docker Swarm-kluster även Docker Visualizer för att enkelt kunna se noder, tjänster och containrar i realtid, och detta kommer jag att gå igenom mer detaljerat i nästa steg.
 
 # Docker Vizualiser
 Docker Swarm Visualizer är ett verktyg som ger en grafisk översikt över ditt Docker Swarm-kluster.
 Det visar alla noder, både manager och worker, samt vilka containrar som körs på respektive nod i realtid.
-Visualizer är ett utmärkt sätt att snabbt förstå klustrets struktur, övervaka distributionen av tjänster och kontrollera att skalning och repliker fungerar som förväntat.
+Vizualizer är ett utmärkt sätt att snabbt förstå klustrets struktur, övervaka distributionen av tjänster och kontrollera att skalning och repliker fungerar som förväntat.
 
 **Steg 1: Börja med att addera följande till docker-stack.yml som vi skapade tidigare för att lägga till Viazualiser som tjänst till vår stack:**
+
+- Eftersom Docker Vizualiser är en tjänst listar vi även den under **services** som nedan.
 
 ```bash
 
@@ -314,13 +331,11 @@ networks:
 - Exponerar Visualizer på port 8081
 - Använder overlay-nätverk så den kan kommunicera med andra tjänster om det behövs.
 
-**Steg 2: Deploya stacken genom att köra detta på manager-noden:**
+**Steg 2: Deploya återigen stacken genom att köra detta på manager-noden:**
 
 ```bash
 docker stack deploy -c docker-stack.yml docker-swarm-app
 ```
-- docker-swarm-app blir namnet på stacken eftersom vår stack kommer i slutändan innehålla flera tjänster: web, viz och traefik
-- samtliga tjänster kommer befinnas sig på följande benämningar: docker-swarm-app-web, docker-swarm-app-viz och docker-swarm-app-traefik
 
 **Steg 3: Kontrollera att tjänsten körs**
 
@@ -332,7 +347,7 @@ docker service ps docker-swarm-app_viz
 
 **Steg 4: Öppna Visualizer**
 
-- Surfa in till managers publika IP följt av port 8081, alltså: http://34.246.185.128:8081
+- Surfa in till managers publika IP följt av port 8081, alltså i mitt fall: http://34.246.185.128:8081
 - Du ser alla noder och containrar i ditt Swarm-kluster visuellt.
 
 **Sammanfattningsvis:**
@@ -342,11 +357,11 @@ docker service ps docker-swarm-app_viz
 
 **Beskrivning av de tre tjänsterna** i min stack:
 
-* **docker-swarm-app-web**
+* **docker-swarm-app_web**
   Min webbapplikation som körs i Swarm. Den hanterar själva innehållet, som HTML och PHP, och kan skalas över flera noder.
 
-* **viz (Docker Swarm Visualizer)**
-  Ett grafiskt verktyg som visar **Swarm-klustret i realtid**, inklusive noder och containrar. Hjälper dig att övervaka distribution och repliker.
+* **docker-swarm_viz (Docker Swarm Visualizer)**
+  Ett grafiskt verktyg som visar **Swarm-klustret i realtid**, inklusive noder och containrar. Den hjälper dig att övervaka distribution och repliker.
 
-* **Traefik**
-  En modern reverse proxy och load balancer som hanterar inkommande trafik. Den styr HTTPS, certifikat via Let's Encrypt, och distribuerar trafiken till dina tjänster i Swarm (t.ex. web-applikationen).
+* **docker-swarm_traefik (Traefik)**
+  En modern reverse proxy och load balancer som hanterar inkommande trafik. Den styr HTTPS, certifikat via Let's Encrypt, och distribuerar trafiken till dina tjänster i Swarm (som min web-applikation)
