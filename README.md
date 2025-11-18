@@ -357,7 +357,7 @@ docker service ps docker-swarm-app_viz
 
 **Beskrivning av de tre tjänsterna** i min stack:
 
-* **docker-swarm-app_web**
+* **docker-swarm-app_web** (Web-applikation)
   Min webbapplikation som körs i Swarm. Den hanterar själva innehållet, som HTML och PHP, och kan skalas över flera noder.
 
 * **docker-swarm_viz (Docker Swarm Visualizer)**
