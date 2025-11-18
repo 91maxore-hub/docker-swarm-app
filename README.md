@@ -48,8 +48,7 @@ docker-swarm-app/
 
 ├── style.css
 
-└── .github/  
-  └── workflows/  
+└── .github/workflows/  
   └── deploy.yml
 
 
