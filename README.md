@@ -951,7 +951,8 @@ exports.handler = async (event) => {
 * Sparar formulärdata (`name`, `email`, `message`, `createdAt`) i DynamoDB-tabellen `ContactFormMessages`.
 * Hanterar CORS (Cross-Origin Resource Sharing) för att möjliggöra anrop från frontend-distributionen på CloudFront.
 
-- Notera att jag kommer gå igenom hur man sätter upp API Gateway och CloudFront i nästkommande steg.
+- Notera att jag har min CloudFront-URL för Access-Control-Allow-Origin, alltså den enda domänen som har tillåtelse att använda min Lambda-fuction. Jag kommer gå igenom hur man sätter upp API Gateway och CloudFront i nästkommande steg.
+- Du kan för tillfället ange S3-Bucket URL för att testa dess funktionalitet men det fungerar på samma sätt eftersom du talar endast om för Lambda-funktionen vilken domän som är tillåten att använda den.
 
 # Uppsättning av Amazon API Gateway för HTTP API
 
@@ -1004,11 +1005,11 @@ Fyll i:
 
 **Steg 10: Gå sedan in APIn och granska att vår Routes och Integrations har skapats korrekt:**
 
-- Routes:
+- **Routes:**
 
 ![alt text](image-54.png)
 
-- AWS Lambda Integration:
+- **AWS Lambda Integration:**
 
 ![alt text](image-55.png)
 
@@ -1036,6 +1037,42 @@ const apiUrl = "https://dkt6vuri6i.execute-api.eu-west-1.amazonaws.com/contact";
 # Uppsättning av Amazon CloudFront som reverse proxy med HTTPS
 
 Denna guide beskriver hur man konfigurerar Amazon CloudFront för att distribuera frontend-filer från S3 och ge säker åtkomst via HTTPS. Målet är att skapa en snabb, säker och skalbar distribution av webbapplikationens statiska innehåll. CloudFront fungerar som en reverse proxy som hanterar HTTPS-anslutningar, och som säkerställer att användare alltid får en pålitlig och krypterad anslutning till webbapplikationen.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange Cloudfront i sökrutan och välj "CloudFront - Global Content Delivery Network**
+
+![alt text](image-59.png)
+
+**Steg 3: Välj "Create a CloudFront distribution"**
+
+![alt text](image-60.png)
+
+**Steg 4: För betalningsplan är enklast att välja pay-as-you-go för vårt ändamål eftersom vi kommer ändå inte hantera större mängder trafik**
+
+![alt text](image-61.png)
+
+**Steg 5: Ange ett namn för vår CloudFront distribution, jag kommer namnge den serverless-app-cloudfront**
+
+![alt text](image-62.png)
+
+**Steg 6: Välj sedan Amazon S3 och bläddra fram vår S3-bucket. Resten kan du lämna som det är**
+
+![alt text](image-63.png)
+
+**Steg 7: Vi kan hoppa över att sätta upp säkerheten med WAF eftersom vår CloudFront är ändå endast i testnings-syfte**
+
+![alt text](image-64.png)
+
+**Steg 8: Du får nu översikt över vår CloudFront distribution. Gå vidare genom att välja "Create distribution"**
+
+![alt text](image-65.png)
+
+**Steg 9: Slutligen bör du se en översikt över CloudFront distributionen vi precis skapade**
+
+![alt text](image-66.png)
 
 # Uppsättning av AWS CodePipeline för CI/CD
 
