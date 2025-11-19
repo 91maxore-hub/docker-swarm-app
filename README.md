@@ -585,26 +585,26 @@ web:
 
 ## **Beskrivning av de tre tjänsterna i min stack:**
 
-* **docker-swarm-app_web** (Applikationen)
+* **docker-swarm-app_web (Applikationen)**
   Webbapplikationen hanterar allt innehåll, som HTML och PHP, och körs som flera repliker som fördelas mellan manager och worker-noder i Swarm-klustret.
 Det gör att applikationen kan skalas och distribueras över flera noder, vilket ger hög tillgänglighet och jämn belastning utan att påverka användarupplevelsen.
 
-* **docker-swarm_viz (Docker Swarm Visualizer)**
+* **docker-swarm_viz (Docker Visualizer)**
   Visualizer är ett grafiskt verktyg som visar Swarm-klustret i realtid, inklusive manager- och worker-noder samt alla containrar.
 Det gör det enkelt att övervaka hur tjänster och repliker distribueras över klustret, vilket ger snabb insikt i klustrets status och hjälper till att upptäcka problem med belastning eller distribution.
 
 * **docker-swarm_traefik (Traefik)**
   Traefik är en reverse proxy och lastbalanserare som körs i Swarm på manager-noden och som hanterar inkommande trafik.
-Den hanterar automatiskt routing av trafik till dina tjänster, distribuerar trafiken till din web-applikation, skapar och förnyar HTTPS-certifikat via Let’s Encrypt, och ger en visuell översikt över routers, tjänster och trafikflöden via dashboarden.
+Den hanterar automatiskt routing av trafik till mina tjänster, distribuerar trafiken till min web-applikation, skapar och förnyar HTTPS-certifikat via Let’s Encrypt, och ger en visuell översikt över routers, tjänster och trafikflöden via dashboarden.
 
 # Automatiserad deployment med GitHub Actions (CI/CD)
 
 **Steg 1: Skapa ett GitHub-repo**
 - Bege dig över till ditt GitHub-konto
-- Skapa ett nytt repo på GitHub genom att Klicka på New repository
+- Skapa ett nytt repo på GitHub genom att klicka på **"New repository"**
 - Jag döpte min till **docker-swarm-app2** enbart för att demonstrera
-- Välj Public eller Private beroende på behov. 
-- Klicka på Create repository.
+- Välj **Public** eller **Private** beroende på behov. 
+- Klicka på **"Create repository"**
 
 ![alt text](image-24.png)
 
@@ -613,7 +613,7 @@ Efter att du skapat ditt repo kommer du bli hänvisad till följande instruktion
 ![alt text](image-21.png)
 
 **Steg 2: Bege dig till projektmappen**  
-Öppna terminalen och bege dig till projektmappen där appens filer ligger på din lokala dator ex.
+- Öppna terminalen och bege dig till projektmappen där appens filer ligger på din lokala dator ex.
 
 ```bash
 cd ~/docker-swarm-app
@@ -637,6 +637,8 @@ git add README.md
 git commit -m "CI/CD Pipeline"
 ```
 
+<div style="margin-top: 400px;"></div>
+
 **Steg 6: Anslut lokalt repo till GitHub:**
 
 ```bash
@@ -659,11 +661,11 @@ git add . && git commit -m "CI/CD Pipeline" && git push origin main
 
 - Detta kommer endast pusha ändrade filer till GitHub och därifrån utgöra en CI/CD-automatiserings deployment så att Docker-imagen alltid håller sig uppdaterad, och därav samma med container-hosten som hostar appen.
 
-Jag har nu initierat GitHub-repot och det är redo att användas för CI/CD-deployments.
+**Jag har nu initierat GitHub-repot och det är redo att användas för CI/CD-deployments.**
 
 **Steg 9. Skapa GitHub Actions workflow**  
-Nästa steg är att skapa en **deploy.yml** för upprätthålla en CI/CD.  
-Så skapa mappen och workflow-filen enligt strukturen som nedan:
+- Nästa steg är att skapa en **deploy.yml** för upprätthålla en CI/CD.  
+- Så skapa mappen och workflow-filen enligt strukturen som nedan:
 
 ```bash
 mkdir -p .github/workflows
@@ -671,13 +673,15 @@ mkdir -p .github/workflows
 
 **Workflow-filen** (.github/workflows/deploy.yml) gör följande:
 
-1. Checkoutar koden från GitHub-repot.
-2. Sätter upp Docker Buildx för multi-platform builds.
-3. Loggar in på Docker Hub med GitHub Secrets.
-4. Bygger Docker-imagen för applikationen.
-5. Pushar imagen till Docker Hub.
-6. Ansluter till Swarm-manager via SSH med GitHub Secrets.
-7. Deployar stacken på Docker Swarm med `docker stack deploy -c docker-stack.yml`, uppdaterar tjänster och rullar ut den nya imagen automatiskt.
+- Checkoutar koden från GitHub-repot.
+- Sätter upp Docker Buildx för multi-platform builds.
+- Loggar in på Docker Hub med GitHub Secrets.
+- Bygger Docker-imagen för applikationen.
+- Pushar imagen till Docker Hub.
+- Ansluter till Swarm-manager via SSH med GitHub Secrets.
+- Deployar stacken på Docker Swarm med `docker stack deploy -c docker-stack.yml`, uppdaterar tjänster och rullar ut den nya imagen automatiskt.
+
+<div style="margin-top: 400px;"></div>
 
 ```bash
 name: CI/CD Pipeline
@@ -719,7 +723,9 @@ jobs:
           docker stack deploy -c /home/ec2-user/docker-stack.yml docker-swarm-app
 ```
 
-Innan vi dock kan gå vidare med att deploya deploy.yml filen behöver vi sätta upp lite GitHub Secrets.
+- **Innan vi kan gå vidare med att deploya deploy.yml-filen behöver vi sätta upp lite GitHub Secrets.**
+
+<div style="margin-top: 400px;"></div>
 
 # GitHub Secrets-konfigurationer
 
@@ -735,32 +741,39 @@ Innan vi dock kan gå vidare med att deploya deploy.yml filen behöver vi sätta
 | `SSH_USER`        | Användarnamnet som används för SSH-anslutningen till manager-noden - `ec2-user`         |
 | `SSH_PRIVATE_KEY` | Privat SSH-nyckel som matchar en publik nyckel på Swarm-manager för autentisering       |
 
-# Så här lägger du till en GitHub Secret
+<div style="margin-top: 800px;"></div>
 
-1. Öppna ditt repo på GitHub (ex. https://github.com/91maxore-hub/docker-swarm-app)
-2. Navigera till fliken **Settings**
-3. Navigera till **Secrets and variables → Actions**
-4. Klicka på **"New repository secret"**
-5. Fyll i:
+# Skapandet av en GitHub Secret
+
+- Öppna ditt repo på GitHub (ex. https://github.com/91maxore-hub/docker-swarm-app)
+- Navigera till fliken **Settings**
+- Navigera till **Secrets and variables → Actions**
+- Klicka på **"New repository secret"**
+- Fyll i:
     - **Name** – t.ex. `SSH_HOST`
     - **Secret** – `34.246.185.128`
-6. Spara med **"Add secret"**
+- Spara med **"Add secret"**
 
-Enligt bästa praxis ska inga känsliga värden, såsom IP-adresser, domännamn, SSH-nycklar eller e-postadresser etc. hårdkodas i koden. Istället lagras desssa uppgifter säkert som GitHub Secrets i repot för att skydda dem från obehörig åtkomst och för att underlätta säker hantering.
+Enligt bästa praxis ska inga känsliga värden, såsom IP-adresser, domännamn, SSH-nycklar eller e-postadresser etc. hårdkodas i koden. Istället lagras desssa uppgifter säkert som **GitHub Secrets** i repot för att skydda dem från obehörig åtkomst och för att underlätta säker hantering.
 
-**Steg 10: Lägg till workflow och pusha**  
+**Steg 1: Lägg till workflow och pusha**  
 För att kontrollera att workflow-filen och CI/CD-deploymen­t fungerar korrekt, pusha ändringarna i ett steg:
 ```bash
 git add .github/workflows/deploy.yml && git commit -m "Lägg till GitHub Actions workflow för CI/CD" && git push origin main
 ```
 
-**Steg 11: Verifiering av CI/CD funktionalitet**  
-Gå till ditt GitHub-repo, till exempel:  
-**https://github.com/91maxore-hub/docker-swarm-app** och granska resultatet.
+**Steg 2: Verifiering av CI/CD funktionalitet**  
 
-Navigera sedan till fliken **Actions**.
+Gå till ditt GitHub-repo, exempelvis:  
+**https://github.com/91maxore-hub/docker-swarm-app**
 
-Om CI/CD är korrekt konfigurerat bör du se att de senaste körningarna är markerade med en **grön bock** som nedan:
+Navigera sedan till fliken **Actions**
+
+![alt text](image-89.png)
+
+<div style="margin-top: 800px;"></div>
+
+**Om CI/CD är korrekt konfigurerat bör du se att de senaste körningarna är markerade med en **grön bock** som nedan:**
 
 ![alt text](image-25.png)
 
@@ -770,30 +783,21 @@ Dessutom en **status** som visar **Success**.  Exempel på ett lyckat arbetsflö
 
 ![alt text](image-26.png)
 
-# ✅ Resultat
+<div style="margin-top: 400px;"></div>
+
+# **✅ Resultat**
 
 Efter att allt var uppsatt och CI/CD-deployment gick igenom kunde jag gå till:
-🔗 https://wavvy.se
+**🔗 https://wavvy.se**
 
-Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse proxy som hanterar trafiken smidigt genom Traefik.
+Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse proxy som hanterar trafiken smidigt genom **Traefik.**
 Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
 
 ![alt text](image-27.png)
 
+<div style="margin-top: 800px;"></div>
+
 <h1 align="center">Serverless App</h1>
-
-<p align="center" style="font-size: 20px; color: black;">
-  <strong>GitHub Repo:</strong>
-  <a href="https://github.com/91maxore-hub/serverless-app" style="color: black; font-weight: bold;">
-    https://github.com/91maxore-hub/serverless-app
-  </a>
-  <br><br>
-  <a href="d3vjy5bvefx3w.cloudfront.net" style="color: black; font-weight: bold;">
-    d3vjy5bvefx3w.cloudfront.net
-  </a>
-</p>
-
-![alt text](image-83.png)
 
 I detta projekt har jag byggt en skalbar och kostnadseffektiv serverless-miljö för en webbapplikation på AWS. Applikationen använder **AWS S3** för hosting av statiska filer, **AWS Lambda** för backend-logik, **API Gateway** för att hantera HTTP-förfrågningar och **DynamoDB** för lagring av formulärsvar. För att säkerställa snabb och säker åtkomst till applikationen används **CloudFront** som reverse proxy med stöd för HTTPS.
 
