@@ -29,7 +29,7 @@
 </p>
 
 <div style="text-align: center;">
-  <img src="image-87'.png" style="width:80%">
+  <img src="image-87.png" style="width:80%">
 </div>
 
 <h1 align="center">Docker Swarm</h1>
