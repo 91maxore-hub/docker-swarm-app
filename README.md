@@ -722,3 +722,112 @@ Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse prox
 Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
 
 ![alt text](image-27.png)
+
+<h1 align="center">Serverless App</h1>
+
+I detta projekt har jag byggt en skalbar och kostnadseffektiv serverless-miljö för en webbapplikation på AWS. Applikationen använder **AWS S3** för hosting av statiska filer, **AWS Lambda** för backend-logik, **API Gateway** för att hantera HTTP-förfrågningar och **DynamoDB** för lagring av formulärsvar. För att säkerställa snabb och säker åtkomst till applikationen används **CloudFront** som reverse proxy med stöd för HTTPS.
+
+Applikationen är helt serverlös, vilket innebär att infrastrukturen automatiskt skalar baserat på belastning, utan behov av att hantera servrar eller operativsystem. Detta gör lösningen både flexibel och lättunderhållen, samtidigt som den erbjuder hög tillgänglighet och prestanda.
+
+För att underlätta utveckling och deployment har jag implementerat **CI/CD med AWS CodePipeline kopplat till GitHub**, vilket automatiskt bygger och distribuerar nya versioner av applikationen till S3 och Lambda. Detta säkerställer snabb iteration och pålitlig uppdatering av applikationen utan manuella steg.
+
+Denna lösning visar hur serverless-teknologi kan kombineras med molntjänster för att skapa en modern webbmiljö som är skalbar, säker och kostnadseffektiv.
+
+Noterbart är att i detta projekt har jag utnyttjat följande molntjänster från AWS:
+
+* **S3 (Simple Storage Service):** Hosting av statiska filer som HTML, CSS och JavaScript.
+* **Lambda:** Serverlös körning av backend-logik för formulärhantering och affärslogik.
+* **API Gateway:** Hantering av HTTP-förfrågningar och routing till Lambda-funktioner.
+* **DynamoDB:** Lagring av formulärsvar och annan applikationsdata.
+* **CloudFront:** Content delivery och reverse proxy med HTTPS för säker och snabb åtkomst.
+* **CodePipeline + GitHub:** CI/CD som möjliggör automatiska bygg och deployment av applikationen.
+
+| Komponent                 | Beskrivning                                                      | Användningsområde                          | Kommentar                                                          |
+| ------------------------- | ---------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| **S3**                    | Lagrar och serverar statiska filer som HTML och CSS              | Hosting av frontend                        | Ger hög tillgänglighet och enkel skalning utan serverhantering     |
+| **Lambda**                | Serverlösa funktioner som kör backend                            | Hantering av formulärdata                  | Skalar automatiskt baserat på belastning, inga servrar att hantera |
+| **API Gateway**           | Hanterar HTTP-förfrågningar och routear dem till Lambda          | Exponering av backendfunktioner som API    | Säkerställer HTTP API-kommunikation mellan frontend och Lambda     |
+| **DynamoDB**              | Databas för lagring av formulärsvar                              | Databas för applikationen                  | Fullt hanterad, serverlös, mycket låg latency                      |
+| **CloudFront**            | Reverse Proxy med HTTPS                                          | Snabb och säker åtkomst till applikationen | Minskar latens globalt och ger HTTPS-stöd                          |
+| **CodePipeline + GitHub** | CI/CD-pipeline som bygger och deployar applikationen automatiskt | Automatiserad deployment                   | Säkerställer snabb iteration och pålitlig uppdatering              |
+
+# Mappstruktur
+
+| Katalog / Fil             | Typ            | Beskrivning                                                                             |
+| ------------------------- | -------------- | --------------------------------------------------------------------------------------- |
+| **index.html**            | HTML-fil       | Huvudsida för webbapplikationen                                                         |
+| **contact_form.html**     | HTML-fil       | Sida med kontaktformulär för användare                                                  |
+| **thankyou.html**         | HTML-fil       | Sida som visas efter att formuläret skickats                                            |
+| **style.css**             | CSS-fil        | Stilark som styr utseende och layout för webbapplikationen                              |
+| **contactFormHandler.js** | JavaScript-fil | Backend-funktion (AWS Lambda) som hanterar formulärinlämning och sparar data i DynamoDB |
+
+# Konfiguration av Amazon S3-bucket
+
+Denna guide beskriver hur man skapar och konfigurerar en Amazon S3-bucket för att hosta statiska webbapplikationsfiler. Målet är att tillhandahålla en högpresterande och skalbar hostingmiljö för HTML-, CSS- och övriga statiska resurser. Bucketen kommer att konfigureras med offentlig läsbehörighet för hosting, samt integreras med CloudFront för snabb distribution och HTTPS-stöd.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange S3 i sökrutan och välj "S3 - Scaleable Storage in the Cloud"**
+
+![alt text](image-28.png)
+
+**Steg 3: Välj Create bucket**
+
+![alt text](image-29.png)
+
+**Steg 4: Ange ett namn för vår S3-bucket, jag kommer namnge den serverless-bucket-2025**
+
+![alt text](image-30.png)
+
+**Steg 5: Gå sedan lite längre ner och bocka ur "Block Public Access settings for this bucket" eftersom vi vill ju komma åt våra filer genom appen**
+
+- Bucket Versioning kan aktiveras för att automatiskt behålla tidigare versioner av filer, vilket underlättar återställning vid oavsiktliga ändringar eller borttagningar. Men i detta fall skippar vi det.
+- Resten kan lämnas som det är.
+
+![alt text](image-31.png)
+
+**Steg 6: Välj slutligen Create bucket**
+
+**Steg 7: Du gör nu få en översikt över din nyskapade S3-bucket**
+
+![alt text](image-32.png)
+
+**Steg 8: Klicka på "Upload" längst bort till höger**
+
+![alt text](image-33.png)
+
+**Steg 9: Välj därefter att ladda upp mappar eller filer. I vårt ändamål kommer vi att ladda upp endast appens filer. Så vi väljer "Add files" följt av "Upload" längst ner**
+
+![alt text](image-35.png)
+
+**Steg 10: Slutligen bör du se en översikt över filerna vi precis laddade upp.**
+
+![alt text](image-36.png)
+
+# Konfiguration av Amazon DynamoDB för lagring av formulärsvar
+
+Denna guide beskriver hur man skapar och konfigurerar en Amazon DynamoDB-tabell för att lagra data från webbapplikationens kontaktformulär. Målet är att tillhandahålla en högpresterande, serverlös och skalbar databaslösning som kan hantera varierande trafik utan att behöva hantera servrar.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange S3 i sökrutan och välj "DynamoDB - Managed NoSQL Database**
+
+![alt text](image-37.png)
+
+**Steg 3: Välj Create table**
+
+![alt text](image-38.png)
+
+**Steg 4: Ange ett namn för vår DynamoDB-databas, jag kommer namnge den ContactFormMessages**
+
+- Ange även **id** som Partion key och värdet ska vara **String**
+
+![alt text](image-39.png)
+
+**Steg 10: Slutligen bör du se en översikt över databasen vi precis skapade**
+
+![alt text](image-40.png)
