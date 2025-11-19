@@ -1,5 +1,7 @@
 <h1 align="center">Docker Swarm</h1>
 
+![alt text](image-27.png)
+
 <p align="center" style="font-size: 20px; color: black;">
   <strong>GitHub Repo:</strong>
   <a href="https://github.com/91maxore-hub/docker-swarm-app" style="color: black; font-weight: bold;">
