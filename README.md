@@ -13,6 +13,21 @@
   </a>
 </p>
 
+<h1 align="center">Serverless App</h1>
+
+<p align="center" style="font-size: 20px; color: black;">
+  <strong>GitHub Repo:</strong>
+  <a href="https://github.com/91maxore-hub/serverless-app" style="color: black; font-weight: bold;">
+    https://github.com/91maxore-hub/serverless-app
+  </a>
+  <br><br>
+  <a href="d3vjy5bvefx3w.cloudfront.net" style="color: black; font-weight: bold;">
+    d3vjy5bvefx3w.cloudfront.net
+  </a>
+</p>
+
+![alt text](image-83.png)
+
 I detta projekt har jag byggt en skalbar och robust miljö för en webbapplikation med Docker Swarm på AWS. Miljön består av tre virtuella EC2-servrar, där en fungerar som manager och två som worker-noder. Applikationen, som är utvecklad med HTML, PHP och CSS, körs i tre separata containrar – en på varje server – vilket ger hög tillgänglighet och enkel skalning.
 
 För att hantera inkommande trafik och säkerställa säkra anslutningar har jag implementerat Traefik som reverse proxy med stöd för HTTPS. För övervakning och visualisering av klustret används Docker Visualizer, vilket ger en tydlig överblick över vilka containrar som körs på vilka noder. Dessutom har jag kopplat CI/CD via GitHub, vilket gör att uppdateringar av applikationen automatiskt byggs och distribueras till klustret.
