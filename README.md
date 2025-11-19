@@ -828,6 +828,139 @@ Denna guide beskriver hur man skapar och konfigurerar en Amazon DynamoDB-tabell 
 
 ![alt text](image-39.png)
 
-**Steg 10: Slutligen bör du se en översikt över databasen vi precis skapade**
+**Steg 5: Slutligen bör du se en översikt över databasen vi precis skapade**
 
 ![alt text](image-40.png)
+
+### Uppsättning av AWS Lambda
+
+Denna guide beskriver hur man skapar och konfigurerar AWS Lambda-funktioner för att hantera backend-logik i webbapplikationen. Målet är att tillhandahålla en skalbar, serverlös miljö där funktioner automatiskt kan exekveras som svar på HTTP-förfrågningar via API Gateway.
+Lambda-funktionerna kommer att hantera inlämning av formulärdata, validering av inkommande data och lagring i DynamoDB, utan att kräva några underhållskrav på servrar.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange S3 i sökrutan och välj "Lambda - Run code without thinking about servers**
+
+![alt text](image-41.png)
+
+**Steg 3: Navigera till Functions**
+
+![alt text](image-42.png)
+
+**Steg 4: Välj Create function längst till höger**
+
+![alt text](image-43.png)
+
+**Steg 5: Ange ett namn för vår Lambda-function, jag kommer namnge den contactFormHandler**
+
+- Resten kan lämnas som det är
+
+![alt text](image-44.png)
+
+**Steg 6: Slutligen bör du se en översikt över funktionen (contactFormHandler.js) vi precis skapade**
+
+![alt text](image-45.png)
+
+**Steg 7: Gå in på den och klistra in följande kod:**
+
+```bash
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const crypto = require("crypto");
+
+const db = new DynamoDBClient({ region: "eu-west-1" });
+
+exports.handler = async (event) => {
+  console.log("Incoming event:", JSON.stringify(event));
+
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "https://d3vjy5bvefx3w.cloudfront.net",
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: ""
+    };
+  }
+
+  let data;
+  try {
+    data = JSON.parse(event.body || "{}");
+  } catch (e) {
+    console.error("JSON parse error:", e);
+    return {
+      statusCode: 400,
+      headers: { "Access-Control-Allow-Origin": "https://d3vjy5bvefx3w.cloudfront.net" },
+      body: JSON.stringify({ error: "Invalid JSON in request" })
+    };
+  }
+
+  const id = crypto.randomUUID();
+
+  const params = {
+    TableName: "ContactFormMessages",
+    Item: {
+      id: { S: id },
+      name: { S: data.name || "UNKNOWN" },
+      email: { S: data.email || "UNKNOWN" },
+      message: { S: data.message || "EMPTY" },
+      createdAt: { S: new Date().toISOString() }
+    }
+  };
+
+  try {
+    console.log("Trying to write to Dynamo:", params);
+    await db.send(new PutItemCommand(params));
+    console.log("Write SUCCESS");
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "https://d3vjy5bvefx3w.cloudfront.net",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+      },
+      body: JSON.stringify({
+        success: true,
+        id,
+        ...data
+      })
+    };
+
+  } catch (err) {
+    console.error("DynamoDB ERROR:", err);
+
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "https://d3vjy5bvefx3w.cloudfront.net"
+      },
+      body: JSON.stringify({ error: "Could not save message", details: err.message })
+    };
+  }
+};
+```
+## **Beskrivning (Lambda – contactFormHandler.js)**
+
+* Körs som en serverlös AWS Lambda-funktion som hanterar inkommande HTTP-förfrågningar via API Gateway.
+* Tar emot formulärdata från frontend och validerar JSON-innehållet.
+* Genererar ett unikt ID för varje formulärinlämning med `crypto.randomUUID()`.
+* Sparar formulärdata (`name`, `email`, `message`, `createdAt`) i DynamoDB-tabellen `ContactFormMessages`.
+* Hanterar CORS (Cross-Origin Resource Sharing) för att möjliggöra anrop från frontend-distributionen på CloudFront.
+
+- Notera att jag kommer gå igenom hur man sätter upp API Gateway och CloudFront i nästkommande steg.
+
+# Uppsättning av Amazon API Gateway för HTTP API
+
+Denna guide beskriver hur man skapar och konfigurerar Amazon API Gateway som en HTTP API för att hantera kommunikationen mellan frontend och serverlösa Lambda-funktioner. Målet är att tillhandahålla en skalbar, säker och lättanvänd ingångspunkt för webbapplikationen, som möjliggör REST-liknande interaktioner utan att behöva hantera servrar. API Gateway kommer att routa inkommande HTTP-förfrågningar till Lambda-funktionerna, hantera CORS och säkerställa att data från formulär kan skickas och tas emot på ett pålitligt sätt.
+
+# Uppsättning av Amazon CloudFront som reverse proxy med HTTPS
+
+Denna guide beskriver hur man konfigurerar Amazon CloudFront för att distribuera frontend-filer från S3 och ge säker åtkomst via HTTPS. Målet är att skapa en snabb, säker och skalbar distribution av webbapplikationens statiska innehåll. CloudFront fungerar som en reverse proxy som hanterar HTTPS-anslutningar, och som säkerställer att användare alltid får en pålitlig och krypterad anslutning till webbapplikationen.
+
+# Uppsättning av AWS CodePipeline för CI/CD
+
+Denna guide beskriver hur man skapar en CI/CD-pipeline med AWS CodePipeline kopplad till ett GitHub-repository. Målet är att automatisera bygg och deployment av både frontend-filer till S3 och backend-funktioner till Lambda. Den säkerställer att ändringar i koden automatiskt testas, byggs och distribueras, vilket gör att nya funktioner snabbt och på ett pålitligt sätt blir tillgängliga i produktionsmiljön.
