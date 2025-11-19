@@ -1,4 +1,4 @@
-# Docker Swarm
+<h1 align="center">Docker Swarm</h1>
 
 <p align="center" style="font-size: 20px; color: black;">
   <strong>GitHub Repo:</strong>
