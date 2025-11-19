@@ -1,3 +1,16 @@
+# Docker Swarm
+
+<p align="center" style="font-size: 20px; color: black;">
+  <strong>GitHub Repo:</strong>
+  <a href="https://github.com/91maxore-hub/docker-swarm-app" style="color: black; font-weight: bold;">
+    https://github.com/91maxore-hub/docker-swarm-app
+  </a>
+  <br><br>
+  <a href="https://wavvy.se" style="color: black; font-weight: bold;">
+    https://wavvy.se
+  </a>
+</p>
+
 I detta projekt har jag byggt en skalbar och robust miljö för en webbapplikation med Docker Swarm på AWS. Miljön består av tre virtuella EC2-servrar, där en fungerar som manager och två som worker-noder. Applikationen, som är utvecklad med HTML, PHP och CSS, körs i tre separata containrar – en på varje server – vilket ger hög tillgänglighet och enkel skalning.
 
 För att hantera inkommande trafik och säkerställa säkra anslutningar har jag implementerat Traefik som reverse proxy med stöd för HTTPS. För övervakning och visualisering av klustret används Docker Visualizer, vilket ger en tydlig överblick över vilka containrar som körs på vilka noder. Dessutom har jag kopplat CI/CD via GitHub, vilket gör att uppdateringar av applikationen automatiskt byggs och distribueras till klustret.
@@ -350,18 +363,360 @@ docker service ps docker-swarm-app_viz
 - Surfa in till managers publika IP följt av port 8081, alltså i mitt fall: http://34.246.185.128:8081
 - Du ser alla noder och containrar i ditt Swarm-kluster visuellt.
 
+![alt text](image-16.png)
+
 **Sammanfattningsvis:**
 - Visualizer körs som en separat service på manager, exponerar ett webbläsargränssnitt och visar i realtid alla noder och containrar i Swarm-klustret.
 
-![alt text](image-16.png)
+# Traefik
+
+Traefik är en dynamisk reverse proxy och lastbalanserare designad för Docker Swarm.
+
+I min miljö körs Traefik på managern, där den automatiskt upptäcker alla tjänster och repliker som körs ute på klustrets noder. Detta gör att min applikation, oavsett om dess containrar körs på manager-noden eller på dina två workers, alltid nås via en central och smart styrd ingångspunkt.
+
+Ett av huvudskälen att använda Traefik i min kluster är dess **automatiserade hantering av HTTPS via Let’s Encrypt**. Med ACME-integration bygger Traefik själv ut, förnyar och lagrar certifikat utan att du behöver göra något manuellt — vilket ger en trygg och självgenererande säkerhetslösning på både port 80 och 443.
+
+Utöver detta fungerar Traefik som en **dynamisk reverse proxy**, där routning uppdateras i realtid när tjänster skalas upp eller ned. All trafik lastbalanseras automatiskt över dina tre repliker av `web`-tjänsten och fördelas jämnt oavsett vilken nod de körs på.
+
+Med Traefiks dashboard, som du exponerar på port 8080, får du dessutom en tydlig visuell överblick över routers, tjänster, certifikat och trafikflöden i realtid — perfekt för att verifiera att lastbalansering, HTTPS och routning fungerar som tänkt.
+
+**Traefik är därför en komplett och självgående lösning för att hantera reverse proxy, trafikstyrning och automatiska HTTPS-certifikat i ditt Docker Swarm-kluster.**
+
+**Steg 1: Börja med att återigen addera följande till docker-stack.yml som vi skapade tidigare för att lägga till Traefik som tjänst till vår stack:**
+
+- Eftersom Traefik är en tjänst listar vi även den under **services** som nedan.
+
+```bash
+
+services:
+  traefik:
+    image: traefik:v2.11.3
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=91maxore@gafe.molndal.se"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--api.insecure=true"
+      - "--log.level=DEBUG"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: overlay
+
+volumes:
+  traefik_letsencrypt:
+```
+
+## **Beskrivning (Traefik)**
+
+* Kör Traefik som en Swarm-tjänst placerad på manager-noden.
+* Använder Docker-socket för att automatiskt upptäcka tjänster och repliker i Swarm-klustret.
+* Fungerar som en reverse proxy och lastbalanserare för alla tjänster som har Traefik-labels.
+* Hanterar HTTPS automatiskt med Let’s Encrypt via ACME.
+* Exponerar HTTP (80), HTTPS (443) och Traefik Dashboard (8080) på manager-noden.
+* Dirigerar all trafik från HTTP → HTTPS med automatisk omdirigering.
+* Lagrar certifikat i en persistent volym för att undvika att certifikat återskapas vid omstart.
+* Körs i overlay-nätverk (`webnet`) för att kunna nå alla tjänster i Swarm-klustret.
+
+**Steg 2: Deploya återigen stacken genom att köra detta på manager-noden:**
+
+```bash
+docker stack deploy -c docker-stack.yml docker-swarm-app
+```
+
+**Nu när vi konfiguerat alla tre tjänster inom stacken så kommer stacken starta:**
+- Traefik på managern
+- Din app med 3 repliker fördelade över noderna
+- Visualizer på managern
+
+**Steg 3: Kontrollera att tjänsten körs**
+
+```bash
+docker service ps docker-swarm-app_traefik
+```
+
+![alt text](image-18.png)
+
+**Steg 4: Kontrollera att samtliga tjänster körs**
+
+```bash
+docker service ls
+```
+
+- Detta borde visa att samtliga tjänster inom stacken vi konfiguerat körs och är replikerade.
+
+* **Traefik**: Reverse proxy med HTTPS via Let’s Encrypt, dashboard på port 8080.
+* **Web**: Applikation med flera repliker, lastbalanseras av Traefik.
+* **Visualizer (viz)**: Visar klustrets noder och containrar i realtid på port 8081.
+
+![alt text](image-19.png)
+
+**Steg 4: Öppna Traefiks Dashboard**
+
+- Surfa in till managers publika IP följt av port 8080, alltså i mitt fall: http://34.246.185.128:8080
+- Du ser nu alla routers, tjänster och trafikflöden i ditt Swarm-kluster visuellt via Traefiks dashboard.
+- Notera att jag konfiguerat wavvy.se domänen via Loopia så den konfigurationen är inte inkluderad i denna guide.
+
+![alt text](image-20.png)
+
+**Steg 5: För att HTTPS ska fungera korrekt behöver vi konfigurera Traefik-labels på web-tjänsten så att den kan routa trafiken min domän.**
+
+```bash
+web:
+  image: 91maxore/docker-swarm-app:latest
+  deploy:
+    replicas: 3
+    restart_policy:
+      condition: on-failure
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`wavvy.se`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls=true"
+      - "traefik.http.routers.web.tls.certresolver=myresolver"
+      - "traefik.http.services.web.loadbalancer.server.port=80"
+  networks:
+    - webnet
+  ```
+
+- Ersätt därmed denna med den tidigare web-del i stack-filen vi använde oss av.
+- Dessa labels gör att Traefik vet vilken domän trafiken ska routas till, vilka entrypoints som ska användas, att TLS ska aktiveras, och vilken certifikatlösare som ska hantera Let’s Encrypt-certifikaten.
+- Traefik-labels konfigurerar web-tjänsten så att HTTPS fungerar och all HTTP-trafik automatiskt dirigeras till HTTPS.
+- Ersätt även med din domän (wavvy.se)
+
+
+**Steg 6: Verifiera HTTPS**
+
+- Surfa nu in till https://wavvy.se
+- Vi kan därmed granska att appen fungerar som den ska med HTTPS/SSL. Du kan även se på bilden att **anslutningen är säker** och att **certifikatet är giltigt**
+
+![alt text](image-23.png)
+
+**Traefik:**
+- Tar emot trafiken
+- Skapar certifikat automatiskt via Let's Encrypt
+- Lastbalanserar över dina 3 web-repliker
+- Dirigerar all HTTP → HTTPS
+
+**Sammanfattningsvis:**
+
+* Traefik körs som en separat service på manager, exponerar ett webbläsargränssnitt och visar i realtid alla routers, tjänster och trafikflöden i Swarm-klustret.
 
 **Beskrivning av de tre tjänsterna** i min stack:
 
 * **docker-swarm-app_web** (Web-applikation)
-  Min webbapplikation som körs i Swarm. Den hanterar själva innehållet, som HTML och PHP, och kan skalas över flera noder.
+  Webbapplikationen hanterar allt innehåll, som HTML och PHP, och körs som flera repliker som fördelas mellan manager och worker-noder i Swarm-klustret.
+Det gör att applikationen kan skalas och distribueras över flera noder, vilket ger hög tillgänglighet och jämn belastning utan att påverka användarupplevelsen.
 
 * **docker-swarm_viz (Docker Swarm Visualizer)**
-  Ett grafiskt verktyg som visar **Swarm-klustret i realtid**, inklusive noder och containrar. Den hjälper dig att övervaka distribution och repliker.
+  Visualizer är ett grafiskt verktyg som visar Swarm-klustret i realtid, inklusive manager- och worker-noder samt alla containrar.
+Det gör det enkelt att övervaka hur tjänster och repliker distribueras över klustret, vilket ger snabb insikt i klustrets status och hjälper till att upptäcka problem med belastning eller distribution.
 
 * **docker-swarm_traefik (Traefik)**
-  En modern reverse proxy och load balancer som hanterar inkommande trafik. Den styr HTTPS, certifikat via Let's Encrypt, och distribuerar trafiken till dina tjänster i Swarm (som min web-applikation)
+  Traefik är en reverse proxy och lastbalanserare som körs i Swarm på manager-noden och som hanterar inkommande trafik.
+Den hanterar automatiskt routing av trafik till dina tjänster, distribuerar trafiken till din web-applikation, skapar och förnyar HTTPS-certifikat via Let’s Encrypt, och ger en visuell översikt över routers, tjänster och trafikflöden via dashboarden.
+
+# Automatiserad deployment med GitHub Actions (CI/CD)
+
+**Steg 1: Skapa ett GitHub-repo**
+- Bege dig över till ditt GitHub-konto
+- Skapa ett nytt repo på GitHub genom att Klicka på New repository
+- Jag döpte min till **docker-swarm-app2** enbart för att demonstrera
+- Välj Public eller Private beroende på behov. 
+- Klicka på Create repository.
+
+![alt text](image-24.png)
+
+Efter att du skapat ditt repo kommer du bli hänvisad till följande instruktioner som du kan se nedan på bilden. Kopiera **Quick setup**-länken och följ vidare instruktionerna på mitt nästa steg. 
+
+![alt text](image-21.png)
+
+**Steg 2: Bege dig till projektmappen**  
+Öppna terminalen och bege dig till projektmappen där appens filer ligger på din lokala dator ex.
+
+```bash
+cd ~/docker-swarm-app
+```
+
+**Steg 3: Initiera ett nytt Git-repo**
+
+```bash
+git init
+```
+
+**Steg 4: Lägg till README.md**
+
+```bash
+git add README.md
+```
+
+**Steg 5: Commit:a ändringarna:**
+
+```bash
+git commit -m "CI/CD Pipeline"
+```
+
+**Steg 6: Anslut lokalt repo till GitHub:**
+
+```bash
+git remote add origin git@github.com:91maxore-hub/docker-swarm-app.git
+```
+
+- Ersätt med quick-setup länken vi kopierade tidigare.
+
+**Steg 7: Pusha till GitHub**
+
+```bash
+git push -u origin main
+```
+
+**Steg 8: Sen varje gång du gör ändringar i en eller flera filer kan du enkelt ange följande kommando för att pusha samtliga ändringar i filer till GitHub:**
+
+```bash
+git add . && git commit -m "CI/CD Pipeline" && git push origin main
+```
+
+- Detta kommer endast pusha ändrade filer till GitHub och därifrån utgöra en CI/CD-automatiserings deployment så att Docker-imagen alltid håller sig uppdaterad, och därav samma med container-hosten som hostar appen.
+
+Jag har nu initierat GitHub-repot och det är redo att användas för CI/CD-deployments.
+
+**Steg 9. Skapa GitHub Actions workflow**  
+Nästa steg är att skapa en **deploy.yml** för upprätthålla en CI/CD.  
+Så skapa mappen och workflow-filen enligt strukturen som nedan:
+
+```bash
+mkdir -p .github/workflows
+```
+
+**Workflow-filen** (.github/workflows/deploy.yml) gör följande:
+
+1. Checkoutar koden från GitHub-repot.
+2. Sätter upp Docker Buildx för multi-platform builds.
+3. Loggar in på Docker Hub med GitHub Secrets.
+4. Bygger Docker-imagen för applikationen.
+5. Pushar imagen till Docker Hub.
+6. Ansluter till Swarm-manager via SSH med GitHub Secrets.
+7. Deployar stacken på Docker Swarm med `docker stack deploy -c docker-stack.yml`, uppdaterar tjänster och rullar ut den nya imagen automatiskt.
+
+```bash
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t 91maxore/docker-swarm-app:latest .
+        docker push 91maxore/docker-swarm-app:latest
+
+    - name: Deploy to Swarm
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker stack deploy -c /home/ec2-user/docker-stack.yml docker-swarm-app
+```
+
+Innan vi dock kan gå vidare med att deploya deploy.yml filen behöver vi sätta upp lite GitHub Secrets.
+
+# GitHub Secrets-konfigurationer
+
+![alt text](image-22.png)
+
+# GitHub Secrets-tabell
+
+| **Secret**        | **Beskrivning**                                                                         |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| `DOCKER_USERNAME` | Mitt användarnamn på Docker Hub, används för att logga in och pusha images - `91maxore` |
+| `DOCKER_PASSWORD` | Mitt lösenord för Docker Hub                                                            |
+| `SSH_HOST`        | IP-adress till Swarm-manager där stacken deployas - `34.246.185.128`                    |
+| `SSH_USER`        | Användarnamnet som används för SSH-anslutningen till manager-noden - `ec2-user`         |
+| `SSH_PRIVATE_KEY` | Privat SSH-nyckel som matchar en publik nyckel på Swarm-manager för autentisering       |
+
+# Så här lägger du till en GitHub Secret
+
+1. Öppna ditt repo på GitHub (ex. https://github.com/91maxore-hub/docker-swarm-app)
+2. Navigera till fliken **Settings**
+3. Navigera till **Secrets and variables → Actions**
+4. Klicka på **"New repository secret"**
+5. Fyll i:
+    - **Name** – t.ex. `SSH_HOST`
+    - **Secret** – `34.246.185.128`
+6. Spara med **"Add secret"**
+
+Enligt bästa praxis ska inga känsliga värden, såsom IP-adresser, domännamn, SSH-nycklar eller e-postadresser etc. hårdkodas i koden. Istället lagras desssa uppgifter säkert som GitHub Secrets i repot för att skydda dem från obehörig åtkomst och för att underlätta säker hantering.
+
+**Steg 10: Lägg till workflow och pusha**  
+För att kontrollera att workflow-filen och CI/CD-deploymen­t fungerar korrekt, pusha ändringarna i ett steg:
+```bash
+git add .github/workflows/deploy.yml && git commit -m "Lägg till GitHub Actions workflow för CI/CD" && git push origin main
+```
+
+**Steg 11: Verifiering av CI/CD funktionalitet**  
+Gå till ditt GitHub-repo, till exempel:  
+**https://github.com/91maxore-hub/docker-swarm-app** och granska resultatet.
+
+Navigera sedan till fliken **Actions**.
+
+Om CI/CD är korrekt konfigurerat bör du se att de senaste körningarna är markerade med en **grön bock** som nedan:
+
+![alt text](image-25.png)
+
+Dessutom en **status** som visar **Success**.  Exempel på ett lyckat arbetsflöde:
+
+**build-and-push — Success**
+
+![alt text](image-26.png)
+
+# ✅ Resultat
+
+Efter att allt var uppsatt och CI/CD-deployment gick igenom kunde jag gå till:
+🔗 https://wavvy.se
+
+Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse proxy som hanterar trafiken smidigt genom Traefik.
+Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
+
+![alt text](image-27.png)
