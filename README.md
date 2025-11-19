@@ -725,6 +725,19 @@ Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
 
 <h1 align="center">Serverless App</h1>
 
+<p align="center" style="font-size: 20px; color: black;">
+  <strong>GitHub Repo:</strong>
+  <a href="https://github.com/91maxore-hub/serverless-app" style="color: black; font-weight: bold;">
+    https://github.com/91maxore-hub/serverless-app
+  </a>
+  <br><br>
+  <a href="d3vjy5bvefx3w.cloudfront.net" style="color: black; font-weight: bold;">
+    d3vjy5bvefx3w.cloudfront.net
+  </a>
+</p>
+
+![alt text](image-83.png)
+
 I detta projekt har jag byggt en skalbar och kostnadseffektiv serverless-miljö för en webbapplikation på AWS. Applikationen använder **AWS S3** för hosting av statiska filer, **AWS Lambda** för backend-logik, **API Gateway** för att hantera HTTP-förfrågningar och **DynamoDB** för lagring av formulärsvar. För att säkerställa snabb och säker åtkomst till applikationen används **CloudFront** som reverse proxy med stöd för HTTPS.
 
 Applikationen är helt serverlös, vilket innebär att infrastrukturen automatiskt skalar baserat på belastning, utan behov av att hantera servrar eller operativsystem. Detta gör lösningen både flexibel och lättunderhållen, samtidigt som den erbjuder hög tillgänglighet och prestanda.
@@ -1074,6 +1087,124 @@ Denna guide beskriver hur man konfigurerar Amazon CloudFront för att distribuer
 
 ![alt text](image-66.png)
 
+**Steg 10: Gå in på vår CloudFront Distribution och börja med att lägga till index.html för "Default root object" genom att navigera till "Edit" längst bort till höger**
+
+![alt text](image-67.png)
+
+**Steg 11: Ange sedan "index.html" för "Default root object"**
+
+![alt text](image-68.png)
+
+**Steg 12: Nu behöver vi lägga till vår API som vi skapade tidigare som en origin. Gör detta genom att navigera till Origins -> "Create origin"**
+
+![alt text](image-69.png)
+
+**Steg 13: Välj vår API Gateway i dropdown-listan när du väljer "Origin domain". Den kommer automatiskt generera din API-url som bilden nedan visar. Resten kan du lämna som det är**
+
+![alt text](image-70.png)
+
+**Steg 14: Du bör nu ha två origins för din CloudFront distribution. En för din S3-bucket, och en för din API**
+
+![alt text](image-71.png)
+
+**Steg 15: Slutligen behöver vi även lägga till två behaviors. Återigen, en för din S3-bucket, och en för din API. Gör detta genom att navigera till Behaviors -> "Create behavior"**
+
+Fyll i följande för S3-bucket:
+    - **Path pattern** – `/`
+    - **Origin and origin groups** – `Välj din S3-bucket`
+    - **Viewer protocol policy** - `Redirect HTTP to HTTPS`
+    - **Allowed HTTP methods** - `GET, HEAD`
+    - **Cache policy** - `CachingOptimized`
+   Spara med **"Save changes"**
+
+![alt text](image-72.png)
+
+Fyll i följande för APIn
+    - **Path pattern** – `/api/*`
+    - **Origin and origin groups** – `Välj din API Gateway`
+    - **Viewer protocol policy** - `HTTPS only`
+    - **Allowed HTTP methods** - `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE`
+    - **Cache policy** - `CachingDisabled`
+    - **Origin request policy** - `AllViewerExceptHostHeader`
+   Spara med **"Save changes"**
+
+![alt text](image-73.png)
+
+**Steg 16: Slutligen, ifall du redan ersatt API-URL på raden i **contact_form.html** som innehåller följande med din API**
+
+```bash
+const apiUrl = "https://dkt6vuri6i.execute-api.eu-west-1.amazonaws.com/contact";
+```
+
+**Så är det bara slutligen ersätta cloudfront-urlen som finns i contactFormHandler.js med din cloudfront-url**
+
 # Uppsättning av AWS CodePipeline för CI/CD
 
 Denna guide beskriver hur man skapar en CI/CD-pipeline med AWS CodePipeline kopplad till ett GitHub-repository. Målet är att automatisera bygg och deployment av både frontend-filer till S3 och backend-funktioner till Lambda. Den säkerställer att ändringar i koden automatiskt testas, byggs och distribueras, vilket gör att nya funktioner snabbt och på ett pålitligt sätt blir tillgängliga i produktionsmiljön.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange Codepipeline i sökrutan och välj "CodePipeline - Release Software using Continuous Delivery**
+
+![alt text](image-74.png)
+
+- Notera för att ansluta GitHub ihop med CodePipeline på AWS behövs följande connector: https://github.com/marketplace/aws-connector-for-github
+
+**Steg 3: Välj "Create pipeline"**
+
+![alt text](image-75.png)
+
+**Steg 4: Välj därefter "Build custom pipeline" under Category**
+
+![alt text](image-76.png)
+
+**Steg 5: Ange ett namn för vår CI/CD Pipeline, jag kommer namnge den AmazonS3Pipeline**
+
+5. Välj/Fyll i även in följande:
+    - **Execution Mode** – `Queued`
+    - **New Service Role** – `Låt AWS CodePipeline skapa en IAM-roll åt dig med korrekta rättigheter`
+6. Navigera sedan ner till **Advanced settings** och välj **Custom location**
+- Du behöver nämligen ha en S3-bucket för att lagra dina artifacts.
+- Skapa helt enkelt en S3-bucket som tidigare och ge den ett passande, jag döpte min till **artifacts-bucket-2025**
+- Välj därefter din nyskapade S3-bucket för Custom location
+
+**S3-artifacts i CI/CD** är helt enkelt filer som din bygg- och deployprocess sparar i ett tryggt förråd (Amazon S3) under arbetets gång.
+
+Tänk dig att din CI/CD-pipeline bygger något — till exempel en app, en konfigurationsfil eller ett paket. Resultatet behöver sparas någonstans så att nästa steg i processen kan använda det.
+
+Amazon S3 fungerar då som **en gemensam lagringsplats** där pipelinen kan lägga sina filer och hämta dem när de behövs.
+
+**Kort sagt:**
+S3-artifacts är filer som CI/CD-systemet lagrar i S3 så att de kan användas och delas mellan olika steg i automatiseringskedjan.
+
+![alt text](image-77.png)
+
+**Steg 6: När vi kommer till "Add source stage" är det dags att koppla samman vår GitHub-repo och AWS CodePipeline**
+
+![alt text](image-78.png)
+
+**Steg 7: "Add test stage" och "Add build stage" kan vi skippa**
+
+**Steg 8: När vi kommer till "Add deploy stage" behöver vi tala om för AWS CodePipeline vilken S3-bucket det är som ska ingå i CI/CD deploymentprocessen genom att ange vår S3-bucket under "Bucket. Resten kan du lämna som det är**
+
+![alt text](image-79.png)
+
+**Steg 9: Du får nu översikt över vår AWS CodePipeline. Gå vidare genom att välja "Create pipeline"**
+
+![alt text](image-80.png)
+
+**Steg 10: Slutligen bör du se en översikt över AWS CodePipelinen vi precis skapade som kommer hantera CI/CD deployment**
+
+![alt text](image-81.png)
+
+# ✅ Resultat
+
+Efter att allt var uppsatt och CI/CD-deployment gick igenom kunde jag gå till:
+🔗 https://d3vjy5bvefx3w.cloudfront.net
+
+Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse proxy som hanterar trafiken smidigt genom CloudFront.
+Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
+
+![alt text](image-82.png)
