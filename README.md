@@ -814,7 +814,7 @@ Denna guide beskriver hur man skapar och konfigurerar en Amazon DynamoDB-tabell 
 
 ![alt text](image.png)
 
-**Steg 2: Ange S3 i sökrutan och välj "DynamoDB - Managed NoSQL Database**
+**Steg 2: Ange DynamoDB i sökrutan och välj "DynamoDB - Managed NoSQL Database**
 
 ![alt text](image-37.png)
 
@@ -841,7 +841,7 @@ Lambda-funktionerna kommer att hantera inlämning av formulärdata, validering a
 
 ![alt text](image.png)
 
-**Steg 2: Ange S3 i sökrutan och välj "Lambda - Run code without thinking about servers**
+**Steg 2: Ange Lambda i sökrutan och välj "Lambda - Run code without thinking about servers**
 
 ![alt text](image-41.png)
 
@@ -956,6 +956,82 @@ exports.handler = async (event) => {
 # Uppsättning av Amazon API Gateway för HTTP API
 
 Denna guide beskriver hur man skapar och konfigurerar Amazon API Gateway som en HTTP API för att hantera kommunikationen mellan frontend och serverlösa Lambda-funktioner. Målet är att tillhandahålla en skalbar, säker och lättanvänd ingångspunkt för webbapplikationen, som möjliggör REST-liknande interaktioner utan att behöva hantera servrar. API Gateway kommer att routa inkommande HTTP-förfrågningar till Lambda-funktionerna, hantera CORS och säkerställa att data från formulär kan skickas och tas emot på ett pålitligt sätt.
+
+**Steg 1: Bege dig till aws.amazon.com**
+
+![alt text](image.png)
+
+**Steg 2: Ange API Gateway i sökrutan och välj "API Gateway - Build, Deploy and Manage APIs**
+
+![alt text](image-46.png)
+
+**Steg 3: Välj "Create an API" längst till höger**
+
+![alt text](image-47.png)
+
+**Steg 4: Välj "HTTP API"**
+
+![alt text](image-48.png)
+
+**Steg 5: Ange ett namn för vår API, jag kommer namnge den contactHandlerFormAPI**
+**Välj även vår Lambda-function vi skapade under förgående steg under Integrations**
+
+![alt text](image-49.png)
+
+**Steg 6: Här behöver vi ange en route till vår API som ska nås via vår Lambda-fuction**
+
+Fyll i:
+    - **Method** – t.ex. `POST`
+    - **Resource path** – `/contact`
+    - **Integration target** - `contactFormHandler`
+6. Spara med **"Add route"**
+
+![alt text](image-50.png)
+
+**Steg 7: Här kan du ange en stage för vår API, alltså ifall vi skapar en stage som heter prod så kan APIn nås via API-URL/prod/api**  
+**Men vi väljer att köra $default för enkelhetensskull, detta resulterar med att vi kan nå vår API genom API-URL/api**
+
+![alt text](image-51.png)
+
+**Steg 8: Slutligen får vi en översikt över vår API med dess konfigurationer**  
+**Välj därefter "Create"**
+
+![alt text](image-52.png)
+
+**Steg 9: Du bör nu ser vår nyskapade API som enligt bilden nedan:**
+
+![alt text](image-53.png)
+
+**Steg 10: Gå sedan in APIn och granska att vår Routes och Integrations har skapats korrekt:**
+
+- Routes:
+
+![alt text](image-54.png)
+
+- AWS Lambda Integration:
+
+![alt text](image-55.png)
+
+**Steg 11: Slutligen behöver vi sätta upp CORS så att vi Lambda-funktionen kan nås genom vår app**
+
+Fyll i:
+    - **Access-Control-Allow-Origin** – S3-bucket URL `http://serverless-bucket-2025.s3-website-eu-west-1.amazonaws.com/`
+    - **Access-Control-Allow-Methods** – `POST`, `OPTIONS`
+    - **Access-Control-Allow-Headers** - `content-type`
+6. Spara med **"Save"**
+
+- För tillfället anger vi vår S3-bucket URL, men vi kommer byta denna senare till cloudfront-url (såsom jag har det konfiguerat enligt bilden) när vi konfiguerat upp CloudFront.
+- Detta gör att endast S3-domänen kan använda vår Lambda-funktion
+
+![alt text](image-57.png)
+
+**Steg 12: Slutligen kopiera APIs "Default endpoint" och ersätt följande API-URL på raden i **contact_form.html** som innehåller:
+
+```bash
+const apiUrl = "https://dkt6vuri6i.execute-api.eu-west-1.amazonaws.com/contact";
+```
+
+![alt text](image-58.png)
 
 # Uppsättning av Amazon CloudFront som reverse proxy med HTTPS
 
