@@ -1025,13 +1025,13 @@ Fyll i:
 
 ![alt text](image-57.png)
 
-**Steg 12: Slutligen kopiera APIs "Default endpoint" och ersätt följande API-URL på raden i **contact_form.html** som innehåller:
+**Steg 12: Slutligen kopiera APIs "Default endpoint" och ersätt följande API-URL på raden i **contact_form.html** som innehåller:**
+
+![alt text](image-58.png)
 
 ```bash
 const apiUrl = "https://dkt6vuri6i.execute-api.eu-west-1.amazonaws.com/contact";
 ```
-
-![alt text](image-58.png)
 
 # Uppsättning av Amazon CloudFront som reverse proxy med HTTPS
 
