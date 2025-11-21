@@ -342,7 +342,7 @@ sudo docker service ps docker-swarm-app_web
 ```
 
 - Webbapplikationen kör nu stabilt och som förväntat på alla tre noder i Swarm-klustret, vilket bekräftar att deploymenten fungerar korrekt.
-- Kort sagt: bilden visar var och hur min web-app körs inom Swarm-klustret
+- Kort sagt: bilden visar var och hur min web-app körs inom Swarm-klustret.
 - Det fungerar på samma sätt genom att senare ange **docker-swarm-app_viz** för **Docker Vizualizer** och **docker-swarm-app_traefik** för **Traefik.**
 
 ![alt text](image-17.png)
