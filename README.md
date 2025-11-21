@@ -809,12 +809,16 @@ Denna lösning visar hur serverless-teknologi kan kombineras med molntjänster f
 
 Noterbart är att i detta projekt har jag utnyttjat följande molntjänster från AWS:
 
-* **S3 (Simple Storage Service):** Hosting av statiska filer som HTML, CSS och JavaScript.
-* **Lambda:** Serverlös körning av backend-logik för formulärhantering och affärslogik.
+* **S3:** Hosting av statiska filer som HTML, CSS och JavaScript.
+* **Lambda:** Serverlös körning av backend-logik för formulärhantering.
 * **API Gateway:** Hantering av HTTP-förfrågningar och routing till Lambda-funktioner.
-* **DynamoDB:** Lagring av formulärsvar och annan applikationsdata.
-* **CloudFront:** Content delivery och reverse proxy med HTTPS för säker och snabb åtkomst.
+* **DynamoDB:** Lagring av formulärsvar.
+* **CloudFront:** Reverse proxy med HTTPS för säker och snabb åtkomst.
 * **CodePipeline + GitHub:** CI/CD som möjliggör automatiska bygg och deployment av applikationen.
+
+<div style="margin-top: 800px;"></div>
+
+# Komponentöversikt och Syfte
 
 | Komponent                 | Beskrivning                                                      | Användningsområde                          | Kommentar                                                          |
 | ------------------------- | ---------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
@@ -827,17 +831,22 @@ Noterbart är att i detta projekt har jag utnyttjat följande molntjänster frå
 
 # Mappstruktur
 
-| Katalog / Fil             | Typ            | Beskrivning                                                                             |
+| **Katalog / Fil**         | **Typ**        | **Beskrivning**                                                                         |
 | ------------------------- | -------------- | --------------------------------------------------------------------------------------- |
-| **index.html**            | HTML-fil       | Huvudsida för webbapplikationen                                                         |
+| **serverless-app/**       | Mapp           | Rootmapp för webbapplikationen                                                          |
+| **index.html**            | HTML-fil       | Huvudsidan för webbapplikationen                                                        |
 | **contact_form.html**     | HTML-fil       | Sida med kontaktformulär för användare                                                  |
-| **thankyou.html**         | HTML-fil       | Sida som visas efter att formuläret skickats                                            |
+| **thankyou.html**         | HTML-fil       | Sida som visas efter att formuläret skickas                                             |
 | **style.css**             | CSS-fil        | Stilark som styr utseende och layout för webbapplikationen                              |
 | **contactFormHandler.js** | JavaScript-fil | Backend-funktion (AWS Lambda) som hanterar formulärinlämning och sparar data i DynamoDB |
 
+
+<div style="margin-top: 400px;"></div>
+
 # Konfiguration av Amazon S3-bucket
 
-Denna guide beskriver hur man skapar och konfigurerar en Amazon S3-bucket för att hosta statiska webbapplikationsfiler. Målet är att tillhandahålla en högpresterande och skalbar hostingmiljö för HTML-, CSS- och övriga statiska resurser. Bucketen kommer att konfigureras med offentlig läsbehörighet för hosting, samt integreras med CloudFront för snabb distribution och HTTPS-stöd.
+Denna guide beskriver hur man skapar och konfigurerar en **Amazon S3-bucket** för att hosta statiska webbapplikationsfiler. Målet är att tillhandahålla en högpresterande och skalbar hostingmiljö för  
+ HTML-, CSS- och övriga statiska resurser. Bucketen kommer att konfigureras med offentlig läsbehörighet för hosting, samt integreras med CloudFront för snabb distribution och HTTPS-stöd.
 
 **Steg 1: Bege dig till aws.amazon.com**
 
@@ -847,11 +856,11 @@ Denna guide beskriver hur man skapar och konfigurerar en Amazon S3-bucket för a
 
 ![alt text](image-28.png)
 
-**Steg 3: Välj Create bucket**
+**Steg 3: Välj Create Bucket**
 
 ![alt text](image-29.png)
 
-**Steg 4: Ange ett namn för vår S3-bucket, jag kommer namnge den serverless-bucket-2025**
+**Steg 4: Ange ett namn för vår S3-bucket, jag kommer namnge den "serverless-bucket-2025"**
 
 ![alt text](image-30.png)
 
@@ -862,13 +871,15 @@ Denna guide beskriver hur man skapar och konfigurerar en Amazon S3-bucket för a
 
 ![alt text](image-31.png)
 
-**Steg 6: Välj slutligen Create bucket**
+<div style="margin-top: 400px;"></div>
 
-**Steg 7: Du gör nu få en översikt över din nyskapade S3-bucket**
+**Steg 6: Välj slutligen "Create bucket"**
+
+**Steg 7: Du bör nu få en översikt över din nyskapade S3-bucket**
 
 ![alt text](image-32.png)
 
-**Steg 8: Klicka på "Upload" längst bort till höger**
+**Steg 8: Gå sedan in på vår nyskapade S3-bucket och klicka på "Upload" längst bort till höger**
 
 ![alt text](image-33.png)
 
@@ -882,17 +893,17 @@ Denna guide beskriver hur man skapar och konfigurerar en Amazon S3-bucket för a
 
 # Konfiguration av Amazon DynamoDB för lagring av formulärsvar
 
-Denna guide beskriver hur man skapar och konfigurerar en Amazon DynamoDB-tabell för att lagra data från webbapplikationens kontaktformulär. Målet är att tillhandahålla en högpresterande, serverlös och skalbar databaslösning som kan hantera varierande trafik utan att behöva hantera servrar.
+Denna guide beskriver hur man skapar och konfigurerar en **Amazon DynamoDB**-tabell för att lagra data från webbapplikationens kontaktformulär. Målet är att tillhandahålla en högpresterande, serverlös och skalbar databaslösning som kan hantera varierande trafik utan att behöva hantera servrar.
 
 **Steg 1: Bege dig till aws.amazon.com**
 
 ![alt text](image.png)
 
-**Steg 2: Ange DynamoDB i sökrutan och välj "DynamoDB - Managed NoSQL Database**
+**Steg 2: Ange DynamoDB i sökrutan och välj "DynamoDB - Managed NoSQL Database"**
 
 ![alt text](image-37.png)
 
-**Steg 3: Välj Create table**
+**Steg 3: Välj "Create table"**
 
 ![alt text](image-38.png)
 
@@ -906,29 +917,33 @@ Denna guide beskriver hur man skapar och konfigurerar en Amazon DynamoDB-tabell 
 
 ![alt text](image-40.png)
 
-### Uppsättning av AWS Lambda
+<div style="margin-top: 400px;"></div>
 
-Denna guide beskriver hur man skapar och konfigurerar AWS Lambda-funktioner för att hantera backend-logik i webbapplikationen. Målet är att tillhandahålla en skalbar, serverlös miljö där funktioner automatiskt kan exekveras som svar på HTTP-förfrågningar via API Gateway.
+# Konfiguration av AWS Lambda
+
+Denna guide beskriver hur man skapar och konfigurerar **AWS Lambda**-funktioner för att hantera  
+backend-logik i webbapplikationen. Målet är att tillhandahålla en skalbar, serverlös miljö där funktioner automatiskt kan exekveras som svar på HTTP-förfrågningar via API Gateway.
 Lambda-funktionerna kommer att hantera inlämning av formulärdata, validering av inkommande data och lagring i DynamoDB, utan att kräva några underhållskrav på servrar.
 
 **Steg 1: Bege dig till aws.amazon.com**
 
 ![alt text](image.png)
 
-**Steg 2: Ange Lambda i sökrutan och välj "Lambda - Run code without thinking about servers**
+**Steg 2: Ange Lambda i sökrutan och välj "Lambda - Run code without thinking about servers"**
 
-![alt text](image-41.png)
+<img src="image-41.png" style="width:90%">
 
-**Steg 3: Navigera till Functions**
+**Steg 3: Navigera till "Functions"**
 
 ![alt text](image-42.png)
 
-**Steg 4: Välj Create function längst till höger**
+**Steg 4: Välj "Create function" längst till höger**
 
 ![alt text](image-43.png)
 
-**Steg 5: Ange ett namn för vår Lambda-function, jag kommer namnge den contactFormHandler**
+**Steg 5: Ange ett namn för vår Lambda-funktion, jag kommer namnge den contactFormHandler**
 
+- Välj "Author from scratch"
 - Resten kan lämnas som det är
 
 ![alt text](image-44.png)
@@ -937,7 +952,9 @@ Lambda-funktionerna kommer att hantera inlämning av formulärdata, validering a
 
 ![alt text](image-45.png)
 
-**Steg 7: Gå in på den och klistra in följande kod:**
+<div style="margin-top: 400px;"></div>
+
+**Steg 7: Gå in på vår nyskapade Lambda-funktion (contactFormHanderl.js) och klistra in följande kod:**
 
 ```bash
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
@@ -1019,26 +1036,27 @@ exports.handler = async (event) => {
 ```
 ## **Beskrivning (Lambda – contactFormHandler.js)**
 
-* Körs som en serverlös AWS Lambda-funktion som hanterar inkommande HTTP-förfrågningar via API Gateway.
-* Tar emot formulärdata från frontend och validerar JSON-innehållet.
-* Genererar ett unikt ID för varje formulärinlämning med `crypto.randomUUID()`.
-* Sparar formulärdata (`name`, `email`, `message`, `createdAt`) i DynamoDB-tabellen `ContactFormMessages`.
-* Hanterar CORS (Cross-Origin Resource Sharing) för att möjliggöra anrop från frontend-distributionen på CloudFront.
+- Körs som en serverlös AWS Lambda-funktion som hanterar inkommande HTTP-förfrågningar via API Gateway.
+- Tar emot formulärdata från frontend och validerar JSON-innehållet.
+- Genererar ett unikt ID för varje formulärinlämning med `crypto.randomUUID()`.
+- Sparar formulärdata (`name`, `email`, `message`, `createdAt`) i DynamoDB-tabellen `ContactFormMessages`.
+- Hanterar CORS (Cross-Origin Resource Sharing) för att möjliggöra anrop från frontend-distributionen på CloudFront.
+- Notera att jag har min CloudFront-distribution för Access-Control-Allow-Origin, alltså den enda domänen som har tillåtelse att använda min Lambda-fuction. Jag kommer gå igenom hur man sätter upp **API Gateway** och **CloudFront** i nästkommande steg.
+- Du kan för tillfället ange din S3-Bucket för att testa dess funktionalitet men det fungerar på samma sätt eftersom du talar endast om för Lambda-funktionen vilken domän som är tillåten att använda den.
 
-- Notera att jag har min CloudFront-URL för Access-Control-Allow-Origin, alltså den enda domänen som har tillåtelse att använda min Lambda-fuction. Jag kommer gå igenom hur man sätter upp API Gateway och CloudFront i nästkommande steg.
-- Du kan för tillfället ange S3-Bucket URL för att testa dess funktionalitet men det fungerar på samma sätt eftersom du talar endast om för Lambda-funktionen vilken domän som är tillåten att använda den.
+<div style="margin-top: 400px;"></div>
 
 # Uppsättning av Amazon API Gateway för HTTP API
 
-Denna guide beskriver hur man skapar och konfigurerar Amazon API Gateway som en HTTP API för att hantera kommunikationen mellan frontend och serverlösa Lambda-funktioner. Målet är att tillhandahålla en skalbar, säker och lättanvänd ingångspunkt för webbapplikationen, som möjliggör REST-liknande interaktioner utan att behöva hantera servrar. API Gateway kommer att routa inkommande HTTP-förfrågningar till Lambda-funktionerna, hantera CORS och säkerställa att data från formulär kan skickas och tas emot på ett pålitligt sätt.
+Denna guide beskriver hur man skapar och konfigurerar **Amazon API Gateway** som en HTTP API för att hantera kommunikationen mellan frontend och serverlösa Lambda-funktioner. Målet är att tillhandahålla en skalbar, säker och lättanvänd ingångspunkt för webbapplikationen, som möjliggör REST-liknande interaktioner utan att behöva hantera servrar. **API Gateway** kommer att routa inkommande HTTP-förfrågningar till Lambda-funktionerna, hantera CORS och säkerställa att data från formulär kan skickas och tas emot på ett pålitligt sätt.
 
 **Steg 1: Bege dig till aws.amazon.com**
 
 ![alt text](image.png)
 
-**Steg 2: Ange API Gateway i sökrutan och välj "API Gateway - Build, Deploy and Manage APIs**
+**Steg 2: Ange API Gateway i sökrutan och välj "API Gateway - Build, Deploy and Manage APIs"**
 
-![alt text](image-46.png)
+<img src="image-46.png" style="width:90%">
 
 **Steg 3: Välj "Create an API" längst till höger**
 
@@ -1048,28 +1066,35 @@ Denna guide beskriver hur man skapar och konfigurerar Amazon API Gateway som en 
 
 ![alt text](image-48.png)
 
-**Steg 5: Ange ett namn för vår API, jag kommer namnge den contactHandlerFormAPI**
-**Välj även vår Lambda-function vi skapade under förgående steg under Integrations**
+**Steg 5: Ange ett namn för vår API. Jag kommer namnge den contactHandlerFormAPI**  
+
+- Välj även vår Lambda-funktion vi skapade under förgående steg under **"Integrations"**
 
 ![alt text](image-49.png)
 
-**Steg 6: Här behöver vi ange en route till vår API som ska nås via vår Lambda-fuction**
+<div style="margin-top: 400px;"></div>
 
-Fyll i:
-    - **Method** – t.ex. `POST`
-    - **Resource path** – `/contact`
-    - **Integration target** - `contactFormHandler`
-6. Spara med **"Add route"**
+**Steg 6: Här behöver vi ange en route till vår API som ska nås via vår Lambda-funktion**
+
+**Fyll i:**    
+- **Method** – `POST`
+- **Resource path** – `/contact`
+- **Integration target** - `contactFormHandler`
+- Spara med **"Add route"**
 
 ![alt text](image-50.png)
 
-**Steg 7: Här kan du ange en stage för vår API, alltså ifall vi skapar en stage som heter prod så kan APIn nås via API-URL/prod/api**  
-**Men vi väljer att köra $default för enkelhetensskull, detta resulterar med att vi kan nå vår API genom API-URL/api**
+**Steg 7: Här kan du ange en stage för vår API.**  
+**Alltså ifall vi skapar en stage som heter "prod" så kan APIn nås via API-URL/prod/api**  
+**Men vi väljer att köra "$default" för enkelhetensskull, detta resulterar med att vi kan nå vår API genom API-URL/api**
 
 ![alt text](image-51.png)
 
+<div style="margin-top: 800px;"></div>
+
 **Steg 8: Slutligen får vi en översikt över vår API med dess konfigurationer**  
-**Välj därefter "Create"**
+
+- Välj därefter **"Create"**
 
 ![alt text](image-52.png)
 
@@ -1077,26 +1102,30 @@ Fyll i:
 
 ![alt text](image-53.png)
 
-**Steg 10: Gå sedan in APIn och granska att vår Routes och Integrations har skapats korrekt:**
+<div style="margin-top: 800px;"></div>
 
-- **Routes:**
+**Steg 10: Gå sedan in APIn och granska att vår "Routes" och "Integrations" har skapats korrekt:**
+
+## **Routes:**
 
 ![alt text](image-54.png)
 
-- **AWS Lambda Integration:**
+## **AWS Lambda Integration:**
 
 ![alt text](image-55.png)
 
-**Steg 11: Slutligen behöver vi sätta upp CORS så att vi Lambda-funktionen kan nås genom vår app**
+<div style="margin-top: 800px;"></div>
 
-Fyll i:
-    - **Access-Control-Allow-Origin** – S3-bucket URL `http://serverless-bucket-2025.s3-website-eu-west-1.amazonaws.com/`
-    - **Access-Control-Allow-Methods** – `POST`, `OPTIONS`
-    - **Access-Control-Allow-Headers** - `content-type`
-6. Spara med **"Save"**
+**Steg 11: Slutligen behöver vi sätta upp CORS så att Lambda-funktionen kan nås genom vår webbapplikation**
 
-- För tillfället anger vi vår S3-bucket URL, men vi kommer byta denna senare till cloudfront-url (såsom jag har det konfiguerat enligt bilden) när vi konfiguerat upp CloudFront.
+**Fyll i:**    
+- **Access-Control-Allow-Origin** – S3-bucket: `http://serverless-bucket-2025.s3-website-eu-west-1.amazonaws.com/`
+- **Access-Control-Allow-Methods** – `POST`, `OPTIONS`
+- **Access-Control-Allow-Headers** - `content-type`
+- Spara med **"Save"**
 - Detta gör att endast S3-domänen kan använda vår Lambda-funktion
+
+**För tillfället anger vi vår S3-bucket, men vi kommer byta denna senare till CloudFront-distributionen (såsom jag har det konfiguerat enligt bilden) när vi konfiguerat upp CloudFront.**
 
 ![alt text](image-57.png)
 
@@ -1108,47 +1137,60 @@ Fyll i:
 const apiUrl = "https://dkt6vuri6i.execute-api.eu-west-1.amazonaws.com/contact";
 ```
 
-# Uppsättning av Amazon CloudFront som reverse proxy med HTTPS
+<div style="margin-top: 400px;"></div>
 
-Denna guide beskriver hur man konfigurerar Amazon CloudFront för att distribuera frontend-filer från S3 och ge säker åtkomst via HTTPS. Målet är att skapa en snabb, säker och skalbar distribution av webbapplikationens statiska innehåll. CloudFront fungerar som en reverse proxy som hanterar HTTPS-anslutningar, och som säkerställer att användare alltid får en pålitlig och krypterad anslutning till webbapplikationen.
+# Konfiguration av Amazon CloudFront som Reverse proxy med HTTPS
+
+Denna guide beskriver hur man konfigurerar **Amazon CloudFront** för att distribuera frontend-filer från S3 och ge säker åtkomst via HTTPS. Målet är att skapa en snabb, säker och skalbar distribution av webbapplikationens statiska innehåll. CloudFront fungerar som en reverse proxy som hanterar HTTPS-anslutningar, och som säkerställer att användare alltid får en pålitlig och krypterad anslutning till webbapplikationen.
 
 **Steg 1: Bege dig till aws.amazon.com**
 
 ![alt text](image.png)
 
-**Steg 2: Ange Cloudfront i sökrutan och välj "CloudFront - Global Content Delivery Network**
+**Steg 2: Ange Cloudfront i sökrutan och välj "CloudFront - Global Content Delivery Network"**
 
 ![alt text](image-59.png)
+
+<div style="margin-top: 400px;"></div>
 
 **Steg 3: Välj "Create a CloudFront distribution"**
 
 ![alt text](image-60.png)
 
-**Steg 4: För betalningsplan är enklast att välja pay-as-you-go för vårt ändamål eftersom vi kommer ändå inte hantera större mängder trafik**
+**Steg 4: För betalningsplan är enklast att välja "pay-as-you-go" för vårt ändamål eftersom vi kommer ändå inte hantera större mängder trafik**
 
 ![alt text](image-61.png)
 
-**Steg 5: Ange ett namn för vår CloudFront distribution, jag kommer namnge den serverless-app-cloudfront**
+<div style="margin-top: 800px;"></div>
+
+**Steg 5: Ange ett namn för vår CloudFront-distribution.**  
+**Jag kommer namnge den "serverless-app-cloudfront"**
 
 ![alt text](image-62.png)
 
-**Steg 6: Välj sedan Amazon S3 och bläddra fram vår S3-bucket. Resten kan du lämna som det är**
+**Steg 6: Välj sedan "Amazon S3" och bläddra fram vår S3-bucket. Resten kan du lämna som det är**
 
 ![alt text](image-63.png)
+
+<div style="margin-top: 400px;"></div>
 
 **Steg 7: Vi kan hoppa över att sätta upp säkerheten med WAF eftersom vår CloudFront är ändå endast i testnings-syfte**
 
 ![alt text](image-64.png)
 
-**Steg 8: Du får nu översikt över vår CloudFront distribution. Gå vidare genom att välja "Create distribution"**
+**Steg 8: Du får nu översikt över vår CloudFront-distribution.**
+
+- Gå vidare genom att välja **"Create distribution"**
 
 ![alt text](image-65.png)
 
-**Steg 9: Slutligen bör du se en översikt över CloudFront distributionen vi precis skapade**
+**Steg 9: Slutligen bör du se en översikt över CloudFront-distributionen vi precis skapade**
 
 ![alt text](image-66.png)
 
-**Steg 10: Gå in på vår CloudFront Distribution och börja med att lägga till index.html för "Default root object" genom att navigera till "Edit" längst bort till höger**
+<div style="margin-top: 400px;"></div>
+
+**Steg 10: Gå in på vår CloudFront-distribution och börja med att lägga till "index.html" för "Default root object" genom att navigera till "Edit" längst bort till höger**
 
 ![alt text](image-67.png)
 
@@ -1156,62 +1198,78 @@ Denna guide beskriver hur man konfigurerar Amazon CloudFront för att distribuer
 
 ![alt text](image-68.png)
 
-**Steg 12: Nu behöver vi lägga till vår API som vi skapade tidigare som en origin. Gör detta genom att navigera till Origins -> "Create origin"**
+**Steg 12: Nu behöver vi lägga till vår API som vi skapade tidigare som en origin.**  
+**Gör detta genom att navigera till Origins -> "Create origin"**
+
+- Origin behövs i CloudFront för att tala om var innehållet ska hämtas ifrån när det inte finns i cachen.
 
 ![alt text](image-69.png)
 
-**Steg 13: Välj vår API Gateway i dropdown-listan när du väljer "Origin domain". Den kommer automatiskt generera din API-url som bilden nedan visar. Resten kan du lämna som det är**
+<div style="margin-top: 400px;"></div>
+
+**Steg 13: Välj vår API Gateway i dropdown-listan när du väljer "Origin domain"**  
+**Den kommer automatiskt generera din API-url som bilden nedan visar. Resten kan du lämna som det är**
 
 ![alt text](image-70.png)
 
-**Steg 14: Du bör nu ha två origins för din CloudFront distribution. En för din S3-bucket, och en för din API**
+**Steg 14: Du bör nu ha två origins för din CloudFront-distribution.**  
+**En för din S3-bucket, och en för din API**
 
 ![alt text](image-71.png)
 
-**Steg 15: Slutligen behöver vi även lägga till två behaviors. Återigen, en för din S3-bucket, och en för din API. Gör detta genom att navigera till Behaviors -> "Create behavior"**
+<div style="margin-top: 800px;"></div>
 
-Fyll i följande för S3-bucket:
-    - **Path pattern** – `/`
-    - **Origin and origin groups** – `Välj din S3-bucket`
-    - **Viewer protocol policy** - `Redirect HTTP to HTTPS`
-    - **Allowed HTTP methods** - `GET, HEAD`
-    - **Cache policy** - `CachingOptimized`
-   Spara med **"Save changes"**
+**Steg 15: Slutligen behöver vi även lägga till två behaviors.**  
+**Återigen, en för din S3-bucket, och en för din API.**  
+**Gör detta genom att navigera till Behaviors -> "Create behavior"**  
+
+- **Behaviors** i CloudFront används för att definiera hur olika URL-mönster hanteras, t.ex. vilken origin som används, hur innehåll cachelagras och vilka säkerhetsinställningar som gäller, såsom krav på HTTPS.
+
+![alt text](image-90.png)
+
+**Fyll i följande för S3-bucket:**
+- **Path pattern** – `/`
+- **Origin and origin groups** – `Välj din S3-bucket`
+- **Viewer protocol policy** - `Redirect HTTP to HTTPS`
+- **Allowed HTTP methods** - `GET, HEAD`
+- **Cache policy** - `CachingOptimized`
+- Spara med **"Save changes"**
 
 ![alt text](image-72.png)
 
-Fyll i följande för APIn
-    - **Path pattern** – `/api/*`
-    - **Origin and origin groups** – `Välj din API Gateway`
-    - **Viewer protocol policy** - `HTTPS only`
-    - **Allowed HTTP methods** - `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE`
-    - **Cache policy** - `CachingDisabled`
-    - **Origin request policy** - `AllViewerExceptHostHeader`
-   Spara med **"Save changes"**
+**Fyll i följande för APIn:**    
+- **Path pattern** – `/api/*`
+- **Origin and origin groups** – `Välj din API Gateway`
+- **Viewer protocol policy** - `HTTPS only`
+- **Allowed HTTP methods** - `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE`
+- **Cache policy** - `CachingDisabled`
+- **Origin request policy** - `AllViewerExceptHostHeader`
+- Spara med **"Save changes"**
 
 ![alt text](image-73.png)
 
-**Steg 16: Slutligen, ifall du redan ersatt API-URL på raden i **contact_form.html** som innehåller följande med din API**
+**Steg 16: Slutligen, ifall du redan ersatt API-URL på raden i **contact_form.html** som innehåller följande med din API "Default endpoint":**  
+- Så är det bara slutligen ersätta din S3-bucket URL som vi angav tidigare i contactFormHandler.js med din CloudFront-distributions URL, exempelvis: https://d3vjy5bvefx3w.cloudfront.net
 
 ```bash
 const apiUrl = "https://dkt6vuri6i.execute-api.eu-west-1.amazonaws.com/contact";
 ```
 
-**Så är det bara slutligen ersätta cloudfront-urlen som finns i contactFormHandler.js med din cloudfront-url**
-
 # Uppsättning av AWS CodePipeline för CI/CD
 
-Denna guide beskriver hur man skapar en CI/CD-pipeline med AWS CodePipeline kopplad till ett GitHub-repository. Målet är att automatisera bygg och deployment av både frontend-filer till S3 och backend-funktioner till Lambda. Den säkerställer att ändringar i koden automatiskt testas, byggs och distribueras, vilket gör att nya funktioner snabbt och på ett pålitligt sätt blir tillgängliga i produktionsmiljön.
+Denna guide beskriver hur man skapar en CI/CD-pipeline med **AWS CodePipeline** kopplad till ett GitHub-repository. Målet är att automatisera bygg och deployment av både frontend-filer till S3 och backend-funktioner till Lambda. Den säkerställer att ändringar i koden automatiskt testas, byggs och distribueras, vilket gör att nya funktioner snabbt och på ett pålitligt sätt blir tillgängliga i produktionsmiljön.
+
+- Notera för att ansluta GitHub ihop med CodePipeline på AWS behövs följande connector: **https://github.com/marketplace/aws-connector-for-github**
 
 **Steg 1: Bege dig till aws.amazon.com**
 
 ![alt text](image.png)
 
-**Steg 2: Ange Codepipeline i sökrutan och välj "CodePipeline - Release Software using Continuous Delivery**
+**Steg 2: Ange Codepipeline i sökrutan och välj "CodePipeline - Release Software using Continuous Delivery"**
 
-![alt text](image-74.png)
+<img src="image-74.png" style="width:80%">
 
-- Notera för att ansluta GitHub ihop med CodePipeline på AWS behövs följande connector: https://github.com/marketplace/aws-connector-for-github
+<div style="margin-top: 400px;"></div>
 
 **Steg 3: Välj "Create pipeline"**
 
@@ -1221,17 +1279,23 @@ Denna guide beskriver hur man skapar en CI/CD-pipeline med AWS CodePipeline kopp
 
 ![alt text](image-76.png)
 
+<div style="margin-top: 800px;"></div>
+
 **Steg 5: Ange ett namn för vår CI/CD Pipeline, jag kommer namnge den AmazonS3Pipeline**
 
-5. Välj/Fyll i även in följande:
-    - **Execution Mode** – `Queued`
-    - **New Service Role** – `Låt AWS CodePipeline skapa en IAM-roll åt dig med korrekta rättigheter`
-6. Navigera sedan ner till **Advanced settings** och välj **Custom location**
-- Du behöver nämligen ha en S3-bucket för att lagra dina artifacts.
-- Skapa helt enkelt en S3-bucket som tidigare och ge den ett passande, jag döpte min till **artifacts-bucket-2025**
-- Välj därefter din nyskapade S3-bucket för Custom location
+**Välj/Fyll i även följande:**
+- **Execution Mode** – `Queued`
+- **New Service Role** – `Låt AWS CodePipeline skapa en IAM-roll åt dig med korrekta rättigheter`  
+- Navigera sedan ner till **Advanced settings** och välj **Custom location**
+- Välj därefter din S3-bucket som innehåller dina artifacts för **Custom location**
 
-**S3-artifacts i CI/CD** är helt enkelt filer som din bygg- och deployprocess sparar i ett tryggt förråd (Amazon S3) under arbetets gång.
+**Du behöver nämligen ha en S3-bucket för att lagra dina artifacts.**  
+**Skapa helt enkelt en S3-bucket som tidigare och ge den ett passande, jag döpte min till**  
+**artifacts-bucket-2025**
+
+<img src="image-77.png" style="width:80%">
+
+**S3-artifacts i CI/CD** är helt enkelt filer som din bygg- och deployprocess sparar i ett tryggt förråd under arbetets gång.
 
 Tänk dig att din CI/CD-pipeline bygger något — till exempel en app, en konfigurationsfil eller ett paket. Resultatet behöver sparas någonstans så att nästa steg i processen kan använda det.
 
@@ -1240,30 +1304,47 @@ Amazon S3 fungerar då som **en gemensam lagringsplats** där pipelinen kan läg
 **Kort sagt:**
 S3-artifacts är filer som CI/CD-systemet lagrar i S3 så att de kan användas och delas mellan olika steg i automatiseringskedjan.
 
-![alt text](image-77.png)
+**Steg 6: När vi kommer till "Add source stage" är det dags att koppla samman vår GitHub-repo och AWS CodePipeline**  
+- För att AWS CodePipeline ska kunna hämta koden från GitHub behöver du skapa och välja en anslutning till ditt GitHub-konto. Detta görs genom att:
 
-**Steg 6: När vi kommer till "Add source stage" är det dags att koppla samman vår GitHub-repo och AWS CodePipeline**
+**Välja följande:**
+- **Source provider** – `GitHub (via GitHub App)`
+- **Connection** – `Klicka på "Connect to GitHub"`  
+- Autentisera med ditt GitHub-konto och ge AWS CodePipeline nödvändiga behörigheter.
+- När anslutningen är etablerad kan du välja repository och branch som ska användas som källkod för pipelinen enligt nedan.
+- **Repository name** – `Repot som ska användas för AWS CodePipieline`
+- **Default branch** – `main eller master (troligtvis main)`
 
 ![alt text](image-78.png)
 
-**Steg 7: "Add test stage" och "Add build stage" kan vi skippa**
+## **Add test stage och Add build stage kan vi skippa**
 
-**Steg 8: När vi kommer till "Add deploy stage" behöver vi tala om för AWS CodePipeline vilken S3-bucket det är som ska ingå i CI/CD deploymentprocessen genom att ange vår S3-bucket under "Bucket. Resten kan du lämna som det är**
+<div style="margin-top: 400px;"></div>
+
+**Steg 7: När vi når "Add deploy stage" behöver vi ange vilken S3-bucket AWS CodePipeline ska använda i CI/CD-deployprocessen. Detta görs genom att specificera vår S3-bucket under fältet "Bucket"**
+
+**Resten kan du lämna som det är.**
 
 ![alt text](image-79.png)
 
-**Steg 9: Du får nu översikt över vår AWS CodePipeline. Gå vidare genom att välja "Create pipeline"**
+<div style="margin-top: 800px;"></div>
+
+**Steg 8: Du får nu översikt över vår AWS CodePipeline. Gå vidare genom att välja "Create pipeline"**
 
 ![alt text](image-80.png)
 
-**Steg 10: Slutligen bör du se en översikt över AWS CodePipelinen vi precis skapade som kommer hantera CI/CD deployment**
+**Steg 9: Slutligen bör du se en översikt över AWS CodePipelinen vi precis skapade som kommer hantera CI/CD deployment**
+
+- Som du kan se har den senaste CI/CD-körningen slutförts korrekt med statusen: **Succeeded**
 
 ![alt text](image-81.png)
+
+<div style="margin-top: 400px;"></div>
 
 # ✅ Resultat
 
 Efter att allt var uppsatt och CI/CD-deployment gick igenom kunde jag gå till:
-🔗 https://d3vjy5bvefx3w.cloudfront.net
+**🔗 https://d3vjy5bvefx3w.cloudfront.net**
 
 Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse proxy som hanterar trafiken smidigt genom CloudFront.
 Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
