@@ -797,6 +797,26 @@ Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
 
 <div style="margin-top: 800px;"></div>
 
+# Användningen av Infrastructure as Code (IaC)
+
+Jag använder Infrastructure as Code (IaC) genom att definiera applikationens infrastruktur med kod, främst med hjälp av Docker och Docker Swarm. Min miljö består av tre EC2-servrar, där en fungerar som manager och två som workers, vilket möjliggör en skalbar och robust containerbaserad miljö. Applikationen, tillsammans med **Traefik** som reverse proxy och **Docker Visualizer** för övervakning, distribueras helt via min `docker-stack.yml`-fil. Detta säkerställer att hela stacken kan köras konsekvent oavsett miljö, och gör det enkelt att lägga till eller ta bort servrar vid behov.
+
+Jag använder också GitHub Actions för att automatisera hela deployment-processen. När jag pushar till main-branchen byggs en Docker‑image automatiskt och deployas till mina servrar via SSH. Alla känsliga värden, såsom domännamn och SSH-nycklar, hanteras säkert via GitHub Secrets istället för att hårdkodas i koden.
+
+Genom att definiera och hantera infrastrukturen som kod – allt från containrar och webbserver till certifikat och nätverksinställningar – blir uppdateringar och skalning av miljön mycket smidigare.
+
+# Användningen av säkerhet
+
+Säkerheten i min lösning hanteras på flera nivåer. Känsliga värden som SSH-nycklar, domännamn och certifikat lagras aldrig i koden, utan hanteras säkert via GitHub Secrets vid deployment.
+
+Traefik används som dynamisk reverse proxy och lastbalanserare i mitt Docker Swarm-kluster. Den körs på manager-noden och upptäcker automatiskt alla tjänster och repliker som körs på både manager och worker-noder, vilket gör att applikationen alltid nås via en central och smart styrd ingångspunkt. Traefik hanterar också HTTPS via Let’s Encrypt med ACME-integration, vilket innebär att certifikat byggs, förnyas och lagras automatiskt utan manuell hantering. Trafiken omdirigeras dessutom automatiskt från HTTP till HTTPS, vilket säkerställer krypterad och trygg åtkomst för användare.
+
+Utöver detta fungerar Traefik som en dynamisk reverse proxy där routing uppdateras i realtid när tjänster skalas upp eller ned. All trafik lastbalanseras automatiskt över mina tre repliker av `web`-tjänsten, vilket ger jämn fördelning oavsett vilken nod containrarna körs på. Genom Traefiks dashboard på port 8080 kan jag dessutom övervaka routers, tjänster, certifikat och trafikflöden i realtid, vilket ger en tydlig visuell överblick över säkerhet och trafikstyrning.
+
+Varje tjänst körs dessutom i en egen container, vilket isolerar komponenterna och begränsar påverkan vid eventuella säkerhetsincidenter. Regelbundna uppdateringar och patchning av containrar bidrar ytterligare till en robust och säker lösning.
+
+<div style="margin-top: 800px;"></div>
+
 <h1 align="center">Serverless App</h1>
 
 I detta projekt har jag byggt en skalbar och kostnadseffektiv serverless-miljö för en webbapplikation på AWS. Applikationen använder **AWS S3** för hosting av statiska filer, **AWS Lambda** för backend-logik, **API Gateway** för att hantera HTTP-förfrågningar och **DynamoDB** för lagring av formulärsvar. För att säkerställa snabb och säker åtkomst till applikationen används **CloudFront** som reverse proxy med stöd för HTTPS.
@@ -1350,3 +1370,13 @@ Min PHP-app laddas med giltigt SSL-certifikat, automatisk HTTPS och reverse prox
 Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
 
 ![alt text](image-82.png)
+
+# Användningen av Infrastructure as Code (IaC)
+
+Jag använder Infrastructure as Code (IaC) för att definiera och hantera mina **AWS Lambda-funktioner**, där funktionens kod, miljövariabler och konfiguration beskrivs som kod. Mitt Lambda-skript tar emot inkommande HTTP-förfrågningar via API Gateway, hanterar CORS, validerar JSON-data och skriver formulärsvar till **DynamoDB** med unika ID:n. Genom IaC kan denna funktion automatiskt distribueras och konfigureras på ett konsekvent sätt, vilket säkerställer att den alltid körs korrekt och med rätt åtkomst till databasen, oavsett miljö.
+
+# Användning av säkerhet
+
+Säkerheten i min serverless-lösning hanteras på flera nivåer. All trafik mellan användare och applikationen går via **CloudFront** med HTTPS, vilket säkerställer krypterad kommunikation och trygg åtkomst. **API Gateway** kontrollerar och hanterar HTTP-förfrågningar, vilket begränsar obehörig åtkomst till Lambda-funktionerna. Data som lagras i **DynamoDB** hanteras säkert och åtkomsten styrs via IAM-behörigheter, vilket skyddar informationen både i vila och under transport.
+
+Genom att använda **CI/CD med AWS CodePipeline** säkerställs att alla uppdateringar till S3 och Lambda distribueras automatiskt och kontrollerat. Detta minimerar risken för manuella misstag och säkerställer att endast korrekt testad kod når produktion, vilket bidrar till en säkrare och mer pålitlig applikation.
