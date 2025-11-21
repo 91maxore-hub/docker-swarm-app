@@ -1,7 +1,9 @@
+<h1 align="center">AWS - Inlämningsuppgift 2 - Max Oredson</h1>
+
 <h1 align="center">Docker Swarm</h1>
 
 <div style="text-align: center;">
-  <img src="image-27.png" style="width:80%">
+  <img src="image-27.png" style="width:70%">
 </div>
 
 <p align="center" style="font-size: 20px; color: black;">
@@ -29,7 +31,7 @@
 </p>
 
 <div style="text-align: center;">
-  <img src="image-87.png" style="width:80%">
+  <img src="image-87.png" style="width:70%">
 </div>
 
 <h1 align="center">Docker Swarm</h1>
@@ -131,11 +133,11 @@ usermod -aG docker ec2-user
 
 ![alt text](image-5.png)
 
-**Steg 6: Du får sedan en kort översikt över EC2-servern längst upp till höger. Välj "Launch instance".**
-
-![alt text](image-8.png)
+**Steg 6: Du får sedan en kort översikt över EC2-servern längst upp till höger. Välj "Launch instance"**
 
 - Repetera nu likadant för **swarm-worker-1** och **swarm-worker-2**
+
+<img src="image-8.png" style="width:70%">
 
 **Steg 7: Du bör nu se en översikt som nedan för samtliga EC2-servrar som kommer används i vårt Docker Swarm-kluster.**
 
@@ -292,7 +294,7 @@ docker node ls
 **Steg 3: Skapa Docker Stack-fil**
 
 - En **docker-stack.yml** behövs för att definiera hela applikationens tjänster, nätverk och inställningar på ett och samma ställe, så att Docker Swarm kan deploya och hantera allt som en komplett stack.
-- På swarm-manager, skapa stackfilen **docker-stack.yml** och klistra in följande:
+- På swarm-managern, skapa stackfilen **docker-stack.yml** och klistra in följande:
 
 ```bash
 version: "3.8"
@@ -315,7 +317,7 @@ networks:
     driver: overlay
 ```
 
-**Beskrivning:**
+## **Beskrivning (Webbapplikationen)**
 
 * Kör `91maxore/docker-swarm-app` som en Swarm-tjänst med 3 repliker.
 * Startar om repliker automatiskt vid fel.
@@ -345,7 +347,7 @@ sudo docker service ps docker-swarm-app_web
 
 ![alt text](image-17.png)
 
-**Steg 7: Vi kan även verifiera att swarm-worker 1 och swarm-worker 2 tagit del av samma docker-image och att webbapplikationen är replikerad utöver alla 3 noder med följande kommando:**
+**Steg 6: Vi kan även verifiera att swarm-worker 1 och swarm-worker 2 tagit del av samma docker-image och att webbapplikationen är replikerad utöver alla 3 noder med följande kommando:**
 
 ```bash
 docker service ls
@@ -415,12 +417,12 @@ docker service ps docker-swarm-app_viz
 - Surfa in till managers publika IP följt av port 8081, alltså i mitt fall: **http://34.246.185.128:8081**
 - Du ser nu alla noder och containrar i ditt Swarm-kluster visuellt.
 
-![alt text](image-16.png)
-
-<div style="margin-top: 400px;"></div>
+<img src="image-16.png" style="width:80%">
 
 **Sammanfattningsvis:**
 - **Docker Visualizer** körs som en separat service på manager, exponerar ett webbläsargränssnitt och visar i realtid alla noder och containrar i Swarm-klustret.
+
+<div style="margin-top: 400px;"></div>
 
 # Traefik
 
@@ -779,7 +781,7 @@ Navigera sedan till fliken **Actions**
 
 Dessutom en **status** som visar **Success**.  Exempel på ett lyckat arbetsflöde:
 
-**build-and-push — Success**
+**build-and-deploy — Success**
 
 ![alt text](image-26.png)
 
@@ -801,7 +803,7 @@ Allt detta sker helt automatiskt – både deployment och certifikatförnyelse.
 
 Jag använder Infrastructure as Code (IaC) genom att definiera applikationens infrastruktur med kod, främst med hjälp av Docker och Docker Swarm. Min miljö består av tre EC2-servrar, där en fungerar som manager och två som workers, vilket möjliggör en skalbar och robust containerbaserad miljö. Applikationen, tillsammans med **Traefik** som reverse proxy och **Docker Visualizer** för övervakning, distribueras helt via min `docker-stack.yml`-fil. Detta säkerställer att hela stacken kan köras konsekvent oavsett miljö, och gör det enkelt att lägga till eller ta bort servrar vid behov.
 
-Jag använder också GitHub Actions för att automatisera hela deployment-processen. När jag pushar till main-branchen byggs en Docker‑image automatiskt och deployas till mina servrar via SSH. Alla känsliga värden, såsom domännamn och SSH-nycklar, hanteras säkert via GitHub Secrets istället för att hårdkodas i koden.
+Jag använder också **GitHub Actions** för att automatisera hela deployment-processen. När jag pushar till main-branchen byggs en Docker‑image automatiskt och deployas till mina servrar via SSH. Alla känsliga värden, såsom domännamn och SSH-nycklar, hanteras säkert via GitHub Secrets istället för att hårdkodas i koden.
 
 Genom att definiera och hantera infrastrukturen som kod – allt från containrar och webbserver till certifikat och nätverksinställningar – blir uppdateringar och skalning av miljön mycket smidigare.
 
